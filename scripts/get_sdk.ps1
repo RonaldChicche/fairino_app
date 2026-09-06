@@ -2,14 +2,10 @@
 <#
 .SYNOPSIS
     Descarga el SDK oficial de FAIRINO y copia la carpeta "fairino" al lado
-    de demo.py.
+    de demo.py. Equivalente PowerShell de scripts/get_sdk.sh.
 
-.DESCRIPTION
-    Hace falta porque el SDK no es instalable con uv/pip: no esta publicado
-    en PyPI y su repo no trae pyproject.toml ni setup.py en la raiz. Hay que
-    vendorizarlo a mano.
-
-    Equivalente PowerShell de scripts/get_sdk.sh.
+    Hace falta porque el SDK no esta en PyPI ni trae metadatos de
+    empaquetado, asi que uv/pip no pueden instalarlo.
 
 .EXAMPLE
     .\scripts\get_sdk.ps1
@@ -23,11 +19,8 @@ $ErrorActionPreference = 'Stop'
 $Repo = 'https://github.com/FAIR-INNOVATION/fairino-python-sdk.git'
 $Dest = Join-Path (Split-Path -Parent $PSScriptRoot) 'fairino'
 
-# Elegir la carpeta del repo segun el sistema.
-# En Windows PowerShell 5.1 la variable $IsWindows no existe, asi que su
-# ausencia ya implica Windows. En PowerShell 7 (multiplataforma) si existe.
-# Nota: hoy linux/fairino/Robot.py y windows/fairino/Robot.py son identicos
-# (mismo md5) y son Python puro, asi que en macOS/Linux vale la de linux.
+# En PowerShell 5.1 la variable $IsWindows no existe, asi que su ausencia ya
+# implica Windows. linux/Robot.py y windows/Robot.py son identicos.
 $Plataforma = 'windows'
 $varIsWindows = Get-Variable -Name IsWindows -ErrorAction SilentlyContinue
 if ($varIsWindows -and -not $varIsWindows.Value) {
@@ -45,6 +38,7 @@ New-Item -ItemType Directory -Path $Tmp -Force | Out-Null
 try {
     Write-Host 'Clonando el SDK ...'
     git clone --depth 1 --quiet $Repo (Join-Path $Tmp 'sdk')
+    # $ErrorActionPreference no cubre el codigo de salida de comandos nativos.
     if ($LASTEXITCODE -ne 0) {
         throw "Fallo el 'git clone' de $Repo (codigo $LASTEXITCODE). Revisa tu conexion."
     }
@@ -55,8 +49,8 @@ try {
         throw "No se encontro $RobotPy. La estructura del repo del SDK pudo haber cambiado."
     }
 
-    # Copiamos solo lo necesario. Se omiten __pycache__\ y build\, que traen
-    # binarios compilados de otras plataformas (~150 MB) que esta demo no usa.
+    # Solo Robot.py y README.txt: __pycache__\ y build\ son ~150 MB de
+    # binarios de otras plataformas que esta demo no usa.
     Write-Host "Copiando a $Dest ..."
     if (Test-Path -LiteralPath $Dest) {
         Remove-Item -LiteralPath $Dest -Recurse -Force

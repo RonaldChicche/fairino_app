@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
-# Descarga el SDK oficial de FAIRINO y copia la carpeta "fairino" al lado
-# de demo.py.
-#
-# Hace falta porque el SDK no es instalable con uv/pip: no esta en PyPI y su
-# repo no trae pyproject.toml ni setup.py en la raiz. Hay que vendorizarlo.
+# Descarga el SDK oficial de FAIRINO y copia la carpeta "fairino" al lado de
+# demo.py. Hace falta porque el SDK no esta en PyPI ni trae metadatos de
+# empaquetado, asi que uv/pip no pueden instalarlo.
 #
 # Uso:  ./scripts/get_sdk.sh
 
@@ -12,13 +10,11 @@ set -euo pipefail
 REPO="https://github.com/FAIR-INNOVATION/fairino-python-sdk.git"
 DEST="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/fairino"
 
-# Elegir la carpeta del repo segun el sistema.
-# Nota: hoy linux/fairino/Robot.py y windows/fairino/Robot.py son identicos
-# (mismo md5) y son Python puro, asi que en macOS usamos la version de linux.
+# linux/Robot.py y windows/Robot.py son identicos (mismo md5) y Python puro,
+# asi que en macOS vale el de linux.
 case "$(uname -s)" in
-    Linux*)                     PLATAFORMA="linux" ;;
-    Darwin*)                    PLATAFORMA="linux" ;;  # macOS: ver nota arriba
-    CYGWIN*|MINGW*|MSYS*)       PLATAFORMA="windows" ;;
+    Linux*|Darwin*)         PLATAFORMA="linux" ;;
+    CYGWIN*|MINGW*|MSYS*)   PLATAFORMA="windows" ;;
     *) echo "Sistema no reconocido: $(uname -s). Usando linux." >&2
        PLATAFORMA="linux" ;;
 esac
@@ -37,8 +33,8 @@ if [ ! -f "$ORIGEN/Robot.py" ]; then
     exit 1
 fi
 
-# Copiamos solo lo necesario. Se omiten __pycache__/ y build/, que traen
-# binarios compilados de otras plataformas (~150 MB) que esta demo no usa.
+# Solo Robot.py y README.txt: __pycache__/ y build/ son ~150 MB de binarios
+# de otras plataformas que esta demo no usa.
 echo "Copiando a $DEST ..."
 rm -rf "$DEST"
 mkdir -p "$DEST"

@@ -1,55 +1,29 @@
 #!/usr/bin/env python3
 """
-Demo minima de control de un brazo robotico FAIRINO FR10 via el SDK oficial
-(RPC sobre XML-RPC, puerto 20003 del controlador).
+Demo de control de un brazo FAIRINO FR10 via el SDK oficial (XML-RPC, puerto 20003).
 
-Uso:
-    uv run demo.py --leer     -> solo se conecta e imprime la postura actual
-    uv run demo.py            -> ejecuta el movimiento A -> B -> A
+    uv run demo.py --leer   -> imprime la postura actual, no mueve nada
+    uv run demo.py          -> mueve A -> B -> A
 
-Requiere la carpeta "fairino" del SDK oficial al lado de este archivo.
+Requiere la carpeta "fairino" del SDK al lado de este archivo (./scripts/get_sdk.sh).
 """
 
 import sys
 import time
 
-# ---------------------------------------------------------------------------
-# CONFIGURACION  <-- lo unico que normalmente necesitas tocar
-# ---------------------------------------------------------------------------
-
-# IP del controlador del robot. La de fabrica de FAIRINO es 192.168.58.2.
-# Tu PC tiene que estar en la misma subred (ej. 192.168.58.100/24).
+# IP del controlador. La de fabrica es 192.168.58.2; tu PC debe estar en su subred.
 ROBOT_IP = "192.168.58.2"
 
-# ---------------------------------------------------------------------------
-# POSTURAS  <-- PLACEHOLDERS: TIENES QUE LLENARLOS TU
-# ---------------------------------------------------------------------------
-#
-# Son posiciones en el ESPACIO DE ARTICULACIONES: 6 valores en GRADOS,
-# en el orden [J1, J2, J3, J4, J5, J6].
-#
-# NO invento valores aqui a proposito: unos angulos inventados pueden mandar
-# el brazo contra la mesa, contra si mismo o fuera de sus limites.
-#
-# Como conseguir los tuyos:
-#   1. Mueve el robot a la postura que quieras con el pendant (modo manual/jog).
-#   2. Lee los 6 angulos en la pantalla del pendant, O
-#      corre:  uv run demo.py --leer
-#      que imprime la postura actual lista para copiar y pegar aqui.
-#   3. Repite para la segunda postura.
-#
-# Ejemplo de formato (NO son valores reales, no los uses):
-#   POSTURA_A = [0.0, -30.0, 90.0, -60.0, 90.0, 0.0]
+# Posturas en grados [J1..J6]. Sacalas del pendant o con `uv run demo.py --leer`.
+# Van en None a proposito: unos angulos inventados estrellan el brazo.
+POSTURA_A = None  # <-- PONER LOS TUYOS, ej. [0.0, -30.0, 90.0, -60.0, 90.0, 0.0]
+POSTURA_B = None  # <-- PONER LOS TUYOS
 
-POSTURA_A = None  # <-- REEMPLAZAR con tus 6 angulos reales, ej. [j1, j2, j3, j4, j5, j6]
-POSTURA_B = None  # <-- REEMPLAZAR con tus 6 angulos reales
+TOOL = 0        # herramienta; 0 = sin calibrar
+USER = 0        # sistema de pieza; 0 = base del robot
+VELOCIDAD = 20  # % de velocidad [0-100]
 
-# Parametros de movimiento.
-TOOL = 0        # numero de herramienta; 0 = sin herramienta calibrada
-USER = 0        # numero de sistema de coordenadas de pieza; 0 = base del robot
-VELOCIDAD = 20  # porcentaje de velocidad [0-100]. Bajo a proposito para la demo.
-
-# ---------------------------------------------------------------------------
+ESPERA_PREPARACION = 1  # s tras cambiar de modo / habilitar
 
 
 try:
@@ -57,17 +31,33 @@ try:
 except ImportError:
     print("ERROR: no se encontro el paquete 'fairino'.")
     print()
-    print("Este SDK no se instala con pip. Tiene que existir una carpeta")
-    print("'fairino' (con Robot.py adentro) al lado de este demo.py.")
-    print()
-    print("Para descargarlo corre:")
+    print("Este SDK no se instala con pip. Descargalo con:")
     print("    ./scripts/get_sdk.sh      (macOS / Linux)")
     print("    .\\scripts\\get_sdk.ps1    (Windows / PowerShell)")
     sys.exit(1)
 
 
+def _pistas_de_red():
+    print()
+    print("Cosas que revisar:")
+    print(f"  - El robot esta encendido y su IP es realmente {ROBOT_IP}")
+    print(f"  - Hay ping:  ping {ROBOT_IP}")
+    print("  - Tu PC esta en la misma subred que el robot")
+    print("  - El cable de red esta en el puerto correcto del controlador")
+    print("  - Ningun firewall bloquea los puertos 20003 / 20005")
+
+
+def _exigir(error, que):
+    """Aborta si el SDK devolvio un codigo de error."""
+    if error != 0:
+        print()
+        print(f"ERROR: {que} fallo con codigo {error}")
+        print("       Causas tipicas: robot sin habilitar, en modo manual,")
+        print("       en paro de emergencia, o postura fuera de limites.")
+        sys.exit(1)
+
+
 def validar_posturas():
-    """Frena antes de conectar si las posturas siguen siendo placeholders."""
     for nombre, postura in (("POSTURA_A", POSTURA_A), ("POSTURA_B", POSTURA_B)):
         if postura is None:
             print(f"ERROR: {nombre} sigue siendo None (es un placeholder).")
@@ -82,11 +72,6 @@ def validar_posturas():
 
 
 def conectar():
-    """Abre la conexion RPC y verifica que de verdad quedo conectada.
-
-    Ojo: RPC() NO lanza excepcion si el robot no responde; se traga el error
-    y solo deja is_connect en False. Por eso hay que revisarlo a mano.
-    """
     print(f"[1/4] Conectando al robot en {ROBOT_IP} ...")
     try:
         robot = Robot.RPC(ROBOT_IP)
@@ -97,6 +82,8 @@ def conectar():
         _pistas_de_red()
         sys.exit(1)
 
+    # RPC() no lanza excepcion si el robot no responde: se traga el error y
+    # solo deja is_connect en False. Hay que revisarlo a mano.
     if not robot.is_connect:
         print()
         print(f"ERROR: no hay respuesta del controlador en {ROBOT_IP}")
@@ -107,18 +94,7 @@ def conectar():
     return robot
 
 
-def _pistas_de_red():
-    print()
-    print("Cosas que revisar:")
-    print(f"  - El robot esta encendido y su IP es realmente {ROBOT_IP}")
-    print(f"  - Hay ping:  ping {ROBOT_IP}")
-    print("  - Tu PC esta en la misma subred que el robot")
-    print("  - El cable de red esta en el puerto correcto del controlador")
-    print("  - Ningun firewall bloquea los puertos 20003 / 20005")
-
-
 def leer_postura(robot):
-    """Imprime la postura actual, lista para pegar en POSTURA_A / POSTURA_B."""
     error, joint_pos = robot.GetActualJointPosDegree()
     if error != 0 or joint_pos is None:
         print(f"ERROR: no se pudo leer la postura (codigo {error})")
@@ -133,32 +109,25 @@ def leer_postura(robot):
 
 def mover_a(robot, nombre, postura):
     print(f"      Moviendo a {nombre}: {postura}")
-    error = robot.MoveJ(postura, TOOL, USER, vel=VELOCIDAD)
-    if error != 0:
-        print()
-        print(f"ERROR: MoveJ a {nombre} fallo con codigo {error}")
-        print("       Causas tipicas: robot sin habilitar, en modo manual,")
-        print("       en paro de emergencia, o postura fuera de limites.")
-        sys.exit(1)
+    _exigir(robot.MoveJ(postura, TOOL, USER, vel=VELOCIDAD), f"MoveJ a {nombre}")
     print(f"      Llego a {nombre}.")
 
 
 def main():
-    # Modo lectura: no mueve nada, solo reporta donde esta el robot.
     if "--leer" in sys.argv:
         robot = conectar()
-        leer_postura(robot)
+        postura = leer_postura(robot)
         robot.CloseRPC()
-        return
+        return 0 if postura is not None else 1
 
     validar_posturas()
     robot = conectar()
 
     print("[2/4] Preparando robot (modo automatico + habilitar) ...")
-    robot.Mode(0)          # 0 = modo automatico
-    time.sleep(1)
-    robot.RobotEnable(1)   # 1 = habilitar servos
-    time.sleep(1)
+    _exigir(robot.Mode(0), "cambiar a modo automatico")
+    time.sleep(ESPERA_PREPARACION)
+    _exigir(robot.RobotEnable(1), "habilitar los servos")
+    time.sleep(ESPERA_PREPARACION)
 
     print("[3/4] Ejecutando movimientos ...")
     mover_a(robot, "POSTURA_A", POSTURA_A)
@@ -168,7 +137,8 @@ def main():
     print("[4/4] Cerrando conexion ...")
     robot.CloseRPC()
     print("Terminado.")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
