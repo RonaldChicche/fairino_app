@@ -9,6 +9,10 @@ __pycache__/
 # SDK vendorizado: se repone con scripts/get_sdk.sh (o .ps1), no se versiona
 fairino/
 
+# Fotos descargadas de la GoPro: binarios, no se versionan.
+# La carpeta la crea gopro_demo.py sola cuando hace falta.
+capturas/
+
 # Logs que genera el SDK de FAIRINO
 fairino_*.log
 *.log

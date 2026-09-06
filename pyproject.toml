@@ -2,7 +2,9 @@
 name = "fr10-demo"
 version = "0.1.0"
 description = "Demo minima de control de un brazo FAIRINO FR10 via el SDK oficial (RPC)"
-requires-python = ">=3.9"
+# open-gopro exige >=3.11,<3.14. El SDK del FR10 es Python puro y funciona
+# en todo ese rango (verificado en 3.13.14), asi que el rango lo fija la GoPro.
+requires-python = ">=3.11,<3.14"
 
 # Sin dependencias a proposito.
 #
@@ -11,5 +13,8 @@ requires-python = ">=3.9"
 # `uv add fairino` ni `uv add git+https://github.com/FAIR-INNOVATION/...`
 # funcionan. Se vendoriza a mano en ./fairino (ver scripts/get_sdk.sh).
 #
-# Fuera de eso, la demo solo usa la libreria estandar.
-dependencies = []
+# La demo del FR10 solo usa la libreria estandar. La de la GoPro si usa el
+# SDK oficial de GoPro, que este si esta en PyPI.
+dependencies = [
+    "open-gopro>=0.22.0",
+]

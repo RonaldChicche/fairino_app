@@ -1,9 +1,18 @@
-# Demo FR10 (FAIRINO) en Python
+# Demos FR10 (FAIRINO) + GoPro en Python
 
-Demo minima para mover un brazo FAIRINO FR10 con el SDK oficial via RPC.
-Sin ROS, sin MoveIt, sin frameworks pesados: solo libreria estandar + el SDK.
+Dos demos minimas e independientes:
 
-Gestionado con [uv](https://docs.astral.sh/uv/).
+| Script | Que hace |
+| ------ | -------- |
+| `demo.py` | Mueve un brazo FAIRINO FR10 por RPC (sin ROS ni MoveIt) |
+| `gopro_demo.py` | Conecta a una GoPro HERO10 por USB, toma una foto y la descarga |
+
+Gestionado con [uv](https://docs.astral.sh/uv/), que tambien se encarga de
+la version de Python (no hace falta conda ni pyenv).
+
+**Python 3.13**, no 3.14: el SDK de GoPro declara `>=3.11,<3.14`. El SDK del
+FR10 es Python puro y funciona en todo ese rango, asi que el limite lo pone
+la camara. `uv` descarga y aisla esa version solo, con `uv sync`.
 
 ## Puesta en marcha
 
@@ -28,12 +37,14 @@ lugar:
 powershell -ExecutionPolicy Bypass -File .\scripts\get_sdk.ps1
 ```
 
-El segundo paso es obligatorio en ambos casos: `fairino/` no esta
-versionado (ver abajo). Los dos scripts hacen exactamente lo mismo
-—clonar el SDK y copiar la carpeta que corresponde a tu sistema—, elige
-el de tu plataforma.
+`uv sync` instala el SDK de la GoPro y fija Python 3.13. El script del
+segundo paso trae el SDK del FR10, que **no** es instalable con uv (ver mas
+abajo) y no esta versionado; los dos scripts hacen lo mismo, elige el de tu
+plataforma.
 
-## Configurar antes de correr
+Si solo te interesa la demo de la GoPro, con `uv sync` basta.
+
+## Demo del FR10: configurar antes de correr
 
 Abre `demo.py` y edita dos cosas:
 
@@ -48,7 +59,7 @@ Abre `demo.py` y edita dos cosas:
 
    que se conecta, imprime la postura actual y no mueve nada.
 
-## Correr la demo
+## Demo del FR10: correr
 
 ```bash
 uv run demo.py
@@ -59,7 +70,31 @@ vuelta a A -> cerrar. Imprime cada paso en consola.
 
 No hace falta activar el venv a mano: `uv run` lo hace solo.
 
-## Por que el SDK no se instala con uv
+## Demo de la GoPro
+
+```bash
+uv run gopro_demo.py --leer   # solo conecta e informa, NO dispara
+uv run gopro_demo.py          # conecta, toma una foto y la descarga
+```
+
+Conecta por **cable USB**. La camara se descubre sola por mDNS, no hace
+falta que le digas el serial ni la IP.
+
+Requisitos en la camara:
+
+- Encendida (no basta con que este enchufada).
+- Cable USB-C **de datos**, no solo de carga.
+- `Preferencias > Conexiones > Conexion USB` en **GoPro Connect** (si esta
+  en MTP/almacenamiento, la API no responde).
+
+Las fotos se guardan en `capturas/` con un prefijo de fecha y hora
+(`20260906-143022_GOPR0001.JPG`). Esa carpeta esta en `.gitignore` y la crea
+el script solo.
+
+A diferencia del SDK del FR10, este si esta en PyPI y lo instala `uv sync`.
+El codigo es **async**, porque asi es la API del SDK oficial.
+
+## Por que el SDK del FR10 no se instala con uv
 
 El SDK de FAIRINO **no es instalable** con `uv add` ni `pip install`. Dos
 razones, ambas comprobadas:
