@@ -6,7 +6,7 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 
-# SDK vendorizado: se repone con ./scripts/get_sdk.sh, no se versiona
+# SDK vendorizado: se repone con scripts/get_sdk.sh (o .ps1), no se versiona
 fairino/
 
 # Logs que genera el SDK de FAIRINO

@@ -60,7 +60,9 @@ except ImportError:
     print("Este SDK no se instala con pip. Tiene que existir una carpeta")
     print("'fairino' (con Robot.py adentro) al lado de este demo.py.")
     print()
-    print("Para descargarlo corre:  ./scripts/get_sdk.sh")
+    print("Para descargarlo corre:")
+    print("    ./scripts/get_sdk.sh      (macOS / Linux)")
+    print("    .\\scripts\\get_sdk.ps1    (Windows / PowerShell)")
     sys.exit(1)
 
 

@@ -7,12 +7,31 @@ Gestionado con [uv](https://docs.astral.sh/uv/).
 
 ## Puesta en marcha
 
+**macOS / Linux (bash):**
+
 ```bash
-uv sync              # crea .venv y resuelve el proyecto
-./scripts/get_sdk.sh # descarga el SDK oficial en ./fairino
+uv sync
+./scripts/get_sdk.sh
 ```
 
-El segundo paso es obligatorio: `fairino/` no esta versionado (ver abajo).
+**Windows (PowerShell):**
+
+```powershell
+uv sync
+.\scripts\get_sdk.ps1
+```
+
+Si PowerShell bloquea el script por la politica de ejecucion, corre en su
+lugar:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\get_sdk.ps1
+```
+
+El segundo paso es obligatorio en ambos casos: `fairino/` no esta
+versionado (ver abajo). Los dos scripts hacen exactamente lo mismo
+—clonar el SDK y copiar la carpeta que corresponde a tu sistema—, elige
+el de tu plataforma.
 
 ## Configurar antes de correr
 
@@ -60,9 +79,16 @@ suelto. (Hay un `setup.py` dentro de `fairino/`, pero es un script de
 compilacion Cython para generar el `.so`, no declara un paquete instalable.)
 
 La via oficial es **vendorizarlo**: copiar la carpeta `fairino` al lado de
-`demo.py`. Eso hace `./scripts/get_sdk.sh`, que clona el repo, detecta tu
-sistema y copia lo que corresponde. Por eso `fairino/` esta en `.gitignore`:
-es codigo de terceros que se repone con el script, no se versiona.
+`demo.py`. Eso hacen los scripts de `scripts/`, que clonan el repo, detectan
+tu sistema y copian lo que corresponde:
+
+| Plataforma      | Script                  |
+| --------------- | ----------------------- |
+| macOS / Linux   | `scripts/get_sdk.sh`    |
+| Windows         | `scripts/get_sdk.ps1`   |
+
+Por eso `fairino/` esta en `.gitignore`: es codigo de terceros que se repone
+con el script, no se versiona.
 
 ### Nota para macOS
 
