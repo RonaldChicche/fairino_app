@@ -1,0 +1,17 @@
+# Entorno virtual (lo gestiona uv)
+.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# SDK vendorizado: se repone con ./scripts/get_sdk.sh, no se versiona
+fairino/
+
+# Logs que genera el SDK de FAIRINO
+fairino_*.log
+*.log
+
+# macOS
+.DS_Store

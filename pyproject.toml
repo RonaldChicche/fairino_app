@@ -1,0 +1,15 @@
+[project]
+name = "fr10-demo"
+version = "0.1.0"
+description = "Demo minima de control de un brazo FAIRINO FR10 via el SDK oficial (RPC)"
+requires-python = ">=3.9"
+
+# Sin dependencias a proposito.
+#
+# El SDK de FAIRINO NO se puede declarar aqui: no esta publicado en PyPI y su
+# repo de GitHub no trae pyproject.toml ni setup.py en la raiz, asi que ni
+# `uv add fairino` ni `uv add git+https://github.com/FAIR-INNOVATION/...`
+# funcionan. Se vendoriza a mano en ./fairino (ver scripts/get_sdk.sh).
+#
+# Fuera de eso, la demo solo usa la libreria estandar.
+dependencies = []
