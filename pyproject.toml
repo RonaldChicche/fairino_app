@@ -6,15 +6,12 @@ description = "Demo minima de control de un brazo FAIRINO FR10 via el SDK oficia
 # en todo ese rango (verificado en 3.13.14), asi que el rango lo fija la GoPro.
 requires-python = ">=3.11,<3.14"
 
-# Sin dependencias a proposito.
-#
 # El SDK de FAIRINO NO se puede declarar aqui: no esta publicado en PyPI y su
 # repo de GitHub no trae pyproject.toml ni setup.py en la raiz, asi que ni
 # `uv add fairino` ni `uv add git+https://github.com/FAIR-INNOVATION/...`
 # funcionan. Se vendoriza a mano en ./fairino (ver scripts/get_sdk.sh).
 #
-# La demo del FR10 solo usa la libreria estandar. La de la GoPro si usa el
-# SDK oficial de GoPro, que este si esta en PyPI.
-dependencies = [
-    "open-gopro>=0.22.0",
-]
+# El entorno base es deliberadamente minimo: conexion y lectura del FR10.
+# La utilidad GoPro se ejecuta aparte con `uv run --with open-gopro ...` para
+# que sus numerosas dependencias WinRT no bloqueen la puesta en marcha del robot.
+dependencies = []

@@ -1,143 +1,105 @@
 #!/usr/bin/env python3
-"""
-Demo de control de un brazo FAIRINO FR10 via el SDK oficial (XML-RPC, puerto 20003).
+"""Conexion y lectura de estado de un robot FAIRINO por XML-RPC.
 
-    uv run demo.py --leer   -> imprime la postura actual, no mueve nada
-    uv run demo.py          -> mueve A -> B -> A
-
-Requiere la carpeta "fairino" del SDK al lado de este archivo (./scripts/get_sdk.sh).
+Este programa es deliberadamente de solo lectura. No contiene llamadas de
+movimiento, cambio de modo ni habilitacion de servos.
 """
 
 import sys
-import time
 
-# IP del controlador. La de fabrica es 192.168.58.2; tu PC debe estar en su subred.
+# El SDK oficial imprime mensajes en chino. La consola de Windows suele usar
+# cp1252 y puede lanzar UnicodeEncodeError durante la propia conexion.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 ROBOT_IP = "192.168.58.2"
-
-# Posturas en grados [J1..J6]. Sacalas del pendant o con `uv run demo.py --leer`.
-# Van en None a proposito: unos angulos inventados estrellan el brazo.
-POSTURA_A = None  # <-- PONER LOS TUYOS, ej. [0.0, -30.0, 90.0, -60.0, 90.0, 0.0]
-POSTURA_B = None  # <-- PONER LOS TUYOS
-
-TOOL = 0        # herramienta; 0 = sin calibrar
-USER = 0        # sistema de pieza; 0 = base del robot
-VELOCIDAD = 20  # % de velocidad [0-100]
-
-ESPERA_PREPARACION = 1  # s tras cambiar de modo / habilitar
-
 
 try:
     from fairino import Robot
 except ImportError:
-    print("ERROR: no se encontro el paquete 'fairino'.")
-    print()
-    print("Este SDK no se instala con pip. Descargalo con:")
-    print("    ./scripts/get_sdk.sh      (macOS / Linux)")
-    print("    .\\scripts\\get_sdk.ps1    (Windows / PowerShell)")
+    print("ERROR: no se encontro el SDK 'fairino'.")
+    print(r"Instalalo con: powershell -ExecutionPolicy Bypass -File .\scripts\get_sdk.ps1")
     sys.exit(1)
 
 
-def _pistas_de_red():
+def pistas_de_red():
     print()
     print("Cosas que revisar:")
-    print(f"  - El robot esta encendido y su IP es realmente {ROBOT_IP}")
-    print(f"  - Hay ping:  ping {ROBOT_IP}")
-    print("  - Tu PC esta en la misma subred que el robot")
-    print("  - El cable de red esta en el puerto correcto del controlador")
-    print("  - Ningun firewall bloquea los puertos 20003 / 20005")
-
-
-def _exigir(error, que):
-    """Aborta si el SDK devolvio un codigo de error."""
-    if error != 0:
-        print()
-        print(f"ERROR: {que} fallo con codigo {error}")
-        print("       Causas tipicas: robot sin habilitar, en modo manual,")
-        print("       en paro de emergencia, o postura fuera de limites.")
-        sys.exit(1)
-
-
-def validar_posturas():
-    for nombre, postura in (("POSTURA_A", POSTURA_A), ("POSTURA_B", POSTURA_B)):
-        if postura is None:
-            print(f"ERROR: {nombre} sigue siendo None (es un placeholder).")
-            print()
-            print("Abre demo.py y pon tus 6 angulos reales en grados.")
-            print("Para leer la postura actual del robot, corre:")
-            print("    uv run demo.py --leer")
-            sys.exit(1)
-        if len(postura) != 6:
-            print(f"ERROR: {nombre} tiene {len(postura)} valores, se esperan 6.")
-            sys.exit(1)
+    print(f"  - El robot esta encendido y su IP es {ROBOT_IP}")
+    print(f"  - Hay conectividad: ping {ROBOT_IP}")
+    print("  - La PC esta en la subred 192.168.58.0/24")
+    print("  - El firewall no bloquea los puertos 20003 / 20005")
 
 
 def conectar():
-    print(f"[1/4] Conectando al robot en {ROBOT_IP} ...")
+    print(f"Conectando al robot en {ROBOT_IP} (solo lectura) ...")
     try:
         robot = Robot.RPC(ROBOT_IP)
-    except Exception as e:
-        print()
-        print(f"ERROR: fallo al crear la conexion RPC con {ROBOT_IP}")
-        print(f"       ({type(e).__name__}: {e})")
-        _pistas_de_red()
-        sys.exit(1)
+    except Exception as exc:
+        print(f"ERROR: no se pudo crear la conexion ({type(exc).__name__}: {exc})")
+        pistas_de_red()
+        return None
 
-    # RPC() no lanza excepcion si el robot no responde: se traga el error y
-    # solo deja is_connect en False. Hay que revisarlo a mano.
     if not robot.is_connect:
-        print()
-        print(f"ERROR: no hay respuesta del controlador en {ROBOT_IP}")
-        _pistas_de_red()
-        sys.exit(1)
-
-    print("      Conectado.")
+        print("ERROR: el controlador no respondio.")
+        pistas_de_red()
+        return None
+    print("Conectado.")
     return robot
 
 
-def leer_postura(robot):
-    error, joint_pos = robot.GetActualJointPosDegree()
-    if error != 0 or joint_pos is None:
-        print(f"ERROR: no se pudo leer la postura (codigo {error})")
-        return None
-    valores = ", ".join(f"{v:.3f}" for v in joint_pos)
-    print()
-    print("Postura actual (grados), copiala a demo.py:")
-    print(f"    [{valores}]")
-    print()
-    return joint_pos
-
-
-def mover_a(robot, nombre, postura):
-    print(f"      Moviendo a {nombre}: {postura}")
-    _exigir(robot.MoveJ(postura, TOOL, USER, vel=VELOCIDAD), f"MoveJ a {nombre}")
-    print(f"      Llego a {nombre}.")
+def mostrar_lectura(nombre, respuesta, formatear=str):
+    try:
+        error, valor = respuesta
+    except (TypeError, ValueError):
+        print(f"  {nombre}: respuesta inesperada: {respuesta!r}")
+        return False
+    if error != 0:
+        print(f"  {nombre}: error del SDK {error}")
+        return False
+    print(f"  {nombre}: {formatear(valor)}")
+    return True
 
 
 def main():
-    if "--leer" in sys.argv:
-        robot = conectar()
-        postura = leer_postura(robot)
-        robot.CloseRPC()
-        return 0 if postura is not None else 1
+    argumentos_desconocidos = [arg for arg in sys.argv[1:] if arg != "--leer"]
+    if argumentos_desconocidos:
+        print(f"ERROR: argumento no permitido: {argumentos_desconocidos[0]}")
+        print("Este programa solo admite --leer y nunca ejecuta movimientos.")
+        return 2
 
-    validar_posturas()
     robot = conectar()
+    if robot is None:
+        return 1
 
-    print("[2/4] Preparando robot (modo automatico + habilitar) ...")
-    _exigir(robot.Mode(0), "cambiar a modo automatico")
-    time.sleep(ESPERA_PREPARACION)
-    _exigir(robot.RobotEnable(1), "habilitar los servos")
-    time.sleep(ESPERA_PREPARACION)
+    print("Estado actual:")
+    lecturas_ok = []
+    try:
+        lecturas_ok.append(
+            mostrar_lectura(
+                "Articulaciones (grados)",
+                robot.GetActualJointPosDegree(),
+                lambda valores: "[" + ", ".join(f"{v:.3f}" for v in valores) + "]",
+            )
+        )
+        lecturas_ok.append(
+            mostrar_lectura(
+                "Pose TCP",
+                robot.GetActualTCPPose(),
+                lambda valores: "[" + ", ".join(f"{v:.3f}" for v in valores) + "]",
+            )
+        )
+        lecturas_ok.append(mostrar_lectura("Errores [principal, secundario]", robot.GetRobotErrorCode()))
+        lecturas_ok.append(mostrar_lectura("Paro de emergencia", robot.GetRobotEmergencyStopState()))
+        lecturas_ok.append(mostrar_lectura("Paradas de seguridad [SI0, SI1]", robot.GetSafetyStopState()))
+        lecturas_ok.append(mostrar_lectura("Comunicacion SDK", robot.GetSDKComState()))
+    finally:
+        robot.CloseRPC()
+        print("Conexion cerrada. No se envio ningun comando de movimiento.")
 
-    print("[3/4] Ejecutando movimientos ...")
-    mover_a(robot, "POSTURA_A", POSTURA_A)
-    mover_a(robot, "POSTURA_B", POSTURA_B)
-    mover_a(robot, "POSTURA_A", POSTURA_A)
-
-    print("[4/4] Cerrando conexion ...")
-    robot.CloseRPC()
-    print("Terminado.")
-    return 0
+    return 0 if all(lecturas_ok) else 1
 
 
 if __name__ == "__main__":

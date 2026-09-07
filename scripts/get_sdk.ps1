@@ -16,7 +16,6 @@ param()
 
 $ErrorActionPreference = 'Stop'
 
-$Repo = 'https://github.com/FAIR-INNOVATION/fairino-python-sdk.git'
 $Dest = Join-Path (Split-Path -Parent $PSScriptRoot) 'fairino'
 
 # En PowerShell 5.1 la variable $IsWindows no existe, asi que su ausencia ya
@@ -28,26 +27,19 @@ if ($varIsWindows -and -not $varIsWindows.Value) {
 }
 Write-Host "Sistema detectado -> usando carpeta '$Plataforma' del SDK"
 
-if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
-    throw "No se encontro 'git' en el PATH. Instalalo desde https://git-scm.com/download/win"
-}
-
 $Tmp = Join-Path ([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName())
 New-Item -ItemType Directory -Path $Tmp -Force | Out-Null
 
 try {
-    Write-Host 'Clonando el SDK ...'
-    git clone --depth 1 --quiet $Repo (Join-Path $Tmp 'sdk')
-    # $ErrorActionPreference no cubre el codigo de salida de comandos nativos.
-    if ($LASTEXITCODE -ne 0) {
-        throw "Fallo el 'git clone' de $Repo (codigo $LASTEXITCODE). Revisa tu conexion."
-    }
-
-    $Origen = Join-Path (Join-Path (Join-Path $Tmp 'sdk') $Plataforma) 'fairino'
-    $RobotPy = Join-Path $Origen 'Robot.py'
-    if (-not (Test-Path -LiteralPath $RobotPy)) {
-        throw "No se encontro $RobotPy. La estructura del repo del SDK pudo haber cambiado."
-    }
+    # El repositorio completo contiene cientos de MB de binarios que esta demo
+    # no usa. Descargar los archivos raw evita clones lentos o interrumpidos.
+    # El controlador de este proyecto expone el canal de estado legado 20004,
+    # no CNDE 20005. Esta es la ultima revision oficial anterior a CNDE.
+    $SdkRef = 'v2.2.4_robot_v3.9.4'
+    $BaseUrl = "https://raw.githubusercontent.com/FAIR-INNOVATION/fairino-python-sdk/$SdkRef/$Plataforma/fairino"
+    $RobotPy = Join-Path $Tmp 'Robot.py'
+    Write-Host 'Descargando Robot.py del SDK oficial ...'
+    Invoke-WebRequest -Uri "$BaseUrl/Robot.py" -OutFile $RobotPy -UseBasicParsing
 
     # Solo Robot.py y README.txt: __pycache__\ y build\ son ~150 MB de
     # binarios de otras plataformas que esta demo no usa.
@@ -59,9 +51,13 @@ try {
 
     Copy-Item -LiteralPath $RobotPy -Destination $Dest
 
-    $ReadmeTxt = Join-Path $Origen 'README.txt'
-    if (Test-Path -LiteralPath $ReadmeTxt) {
+    $ReadmeTxt = Join-Path $Tmp 'README.txt'
+    try {
+        Invoke-WebRequest -Uri "$BaseUrl/README.txt" -OutFile $ReadmeTxt -UseBasicParsing
         Copy-Item -LiteralPath $ReadmeTxt -Destination $Dest
+    }
+    catch {
+        Write-Warning 'No se pudo descargar README.txt; Robot.py si esta instalado.'
     }
 
     $Kb = [math]::Round(

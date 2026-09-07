@@ -1,153 +1,69 @@
-# Demos FR10 (FAIRINO) + GoPro en Python
+# FAIRINO FR10: conexion y lectura segura
 
-Dos demos minimas e independientes:
+Proyecto Python para conectar por RPC con un FAIRINO FR10 y leer su estado.
+Durante esta fase, `demo.py` no contiene llamadas de movimiento, habilitacion
+de servos ni cambio de modo.
 
-| Script | Que hace |
-| ------ | -------- |
-| `demo.py` | Mueve un brazo FAIRINO FR10 por RPC (sin ROS ni MoveIt) |
-| `gopro_demo.py` | Conecta a una GoPro HERO10 por USB, toma una foto y la descarga |
+`uv` administra una instalacion aislada de Python 3.13; no hace falta instalar
+Python del sistema, Conda ni activar el entorno virtual manualmente.
 
-Gestionado con [uv](https://docs.astral.sh/uv/), que tambien se encarga de
-la version de Python (no hace falta conda ni pyenv).
-
-**Python 3.13**, no 3.14: el SDK de GoPro declara `>=3.11,<3.14`. El SDK del
-FR10 es Python puro y funciona en todo ese rango, asi que el limite lo pone
-la camara. `uv` descarga y aisla esa version solo, con `uv sync`.
-
-## Puesta en marcha
-
-**macOS / Linux (bash):**
-
-```bash
-uv sync
-./scripts/get_sdk.sh
-```
-
-**Windows (PowerShell):**
+## Preparar Windows
 
 ```powershell
 uv sync
-.\scripts\get_sdk.ps1
-```
-
-Si PowerShell bloquea el script por la politica de ejecucion, corre en su
-lugar:
-
-```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\get_sdk.ps1
 ```
 
-`uv sync` instala el SDK de la GoPro y fija Python 3.13. El script del
-segundo paso trae el SDK del FR10, que **no** es instalable con uv (ver mas
-abajo) y no esta versionado; los dos scripts hacen lo mismo, elige el de tu
-plataforma.
+El SDK de FAIRINO no esta publicado como paquete instalable. El segundo comando
+descarga solamente `windows/fairino/Robot.py` desde la revision oficial
+`v2.2.4_robot_v3.9.4` y lo guarda en `fairino/`. Esa revision usa el puerto de
+estado legado `20004` que expone este controlador; las revisiones nuevas exigen
+CNDE en `20005`.
 
-Si solo te interesa la demo de la GoPro, con `uv sync` basta.
+## Conectar y leer el robot
 
-## Demo del FR10: configurar antes de correr
+1. Verifica `ROBOT_IP` en `demo.py` (la IP de fabrica es `192.168.58.2`).
+2. Conecta la PC a la red del controlador y comprueba `ping 192.168.58.2`.
+3. Ejecuta:
 
-Abre `demo.py` y edita dos cosas:
-
-1. `ROBOT_IP` — la IP del controlador (de fabrica: `192.168.58.2`).
-2. `POSTURA_A` y `POSTURA_B` — vienen en `None` a proposito. Son 6 angulos
-   en grados `[J1..J6]`. Consiguelos moviendo el robot con el pendant y
-   leyendo los valores, o corriendo:
-
-   ```bash
-   uv run demo.py --leer
-   ```
-
-   que se conecta, imprime la postura actual y no mueve nada.
-
-## Demo del FR10: correr
-
-```bash
-uv run demo.py
+```powershell
+uv run demo.py --leer
 ```
 
-Hace: conectar -> modo automatico + habilitar -> `MoveJ` a A -> a B -> de
-vuelta a A -> cerrar. Imprime cada paso en consola.
+El script lee:
 
-No hace falta activar el venv a mano: `uv run` lo hace solo.
+- posiciones de las seis articulaciones;
+- pose TCP;
+- codigos de error;
+- paro de emergencia y paradas de seguridad;
+- estado de comunicacion del SDK.
 
-## Demo de la GoPro
+Después cierra la conexion. Cualquier argumento distinto de `--leer` se rechaza.
 
-```bash
-uv run gopro_demo.py --leer   # solo conecta e informa, NO dispara
-uv run gopro_demo.py          # conecta, toma una foto y la descarga
+## Barrera de seguridad
+
+No se implementaran ni ejecutaran movimientos hasta recibir confirmacion
+explicita. Incluso entonces, el operador humano sera quien ejecute cualquier
+accion fisica; Codex no ejecutara comandos de movimiento.
+
+## GoPro (independiente y no prioritaria)
+
+La utilidad `gopro_demo.py` usa `open-gopro`, que en Windows descarga varias
+dependencias WinRT. Para que eso no bloquee el entorno del robot, se ejecuta de
+forma separada:
+
+```powershell
+uv run --with open-gopro gopro_demo.py --leer
 ```
 
-Conecta por **cable USB**. La camara se descubre sola por mDNS, no hace
-falta que le digas el serial ni la IP.
+No es necesario para conectar al FR10.
 
-Requisitos en la camara:
+## Documentacion y compatibilidad
 
-- Encendida (no basta con que este enchufada).
-- Cable USB-C **de datos**, no solo de carga.
-- `Preferencias > Conexiones > Conexion USB` en **GoPro Connect** (si esta
-  en MTP/almacenamiento, la API no responde).
+- Manual oficial FAIRINO SDK: https://fairino-doc-en.readthedocs.io/latest/SDKManual/index.html
+- uv y Python administrado: https://docs.astral.sh/uv/guides/install-python/
 
-Las fotos se guardan en `capturas/` con un prefijo de fecha y hora
-(`20260906-143022_GOPR0001.JPG`). Esa carpeta esta en `.gitignore` y la crea
-el script solo.
-
-A diferencia del SDK del FR10, este si esta en PyPI y lo instala `uv sync`.
-El codigo es **async**, porque asi es la API del SDK oficial.
-
-## Por que el SDK del FR10 no se instala con uv
-
-El SDK de FAIRINO **no es instalable** con `uv add` ni `pip install`. Dos
-razones, ambas comprobadas:
-
-```
-$ uv add fairino
-  x No solution found: fairino was not found in the package registry
-
-$ uv add git+https://github.com/FAIR-INNOVATION/fairino-python-sdk
-  error: ... does not appear to be a Python project, as neither
-  `pyproject.toml` nor `setup.py` are present in the directory
-```
-
-No esta publicado en PyPI, y el repo de GitHub no trae metadatos de
-empaquetado en la raiz — solo carpetas `linux/` y `windows/` con el codigo
-suelto. (Hay un `setup.py` dentro de `fairino/`, pero es un script de
-compilacion Cython para generar el `.so`, no declara un paquete instalable.)
-
-La via oficial es **vendorizarlo**: copiar la carpeta `fairino` al lado de
-`demo.py`. Eso hacen los scripts de `scripts/`, que clonan el repo, detectan
-tu sistema y copian lo que corresponde:
-
-| Plataforma      | Script                  |
-| --------------- | ----------------------- |
-| macOS / Linux   | `scripts/get_sdk.sh`    |
-| Windows         | `scripts/get_sdk.ps1`   |
-
-Por eso `fairino/` esta en `.gitignore`: es codigo de terceros que se repone
-con el script, no se versiona.
-
-### Nota para macOS
-
-El repo solo trae `linux/` y `windows/`, pero `fairino/Robot.py` es identico
-en las dos (mismo md5) y es Python puro —usa `xmlrpc` y `socket`, no carga
-ningun `.so` ni `.dll`—, asi que la version de `linux/` corre sin problema en
-macOS. Las carpetas `libfairino/` del repo si son binarios por plataforma,
-pero esta demo no las necesita. El script copia solo `Robot.py` y
-`README.txt`, omitiendo `__pycache__/` y `build/` (~150 MB de binarios de
-otras plataformas).
-
-## Notas
-
-- `TOOL = 0` y `USER = 0` significan "sin herramienta ni sistema de pieza
-  calibrados". Correcto para una demo; en produccion se calibran.
-- `VELOCIDAD = 20` (%) esta bajo a proposito. Subelo con cuidado.
-- `MoveJ` es movimiento en espacio de articulaciones: el efector final NO
-  sigue una linea recta. Ten el area despejada y el paro de emergencia a mano.
-- El SDK imprime su propio log (parte en chino) antes de los mensajes de
-  esta demo. Es normal, no es un error del script.
-- El SDK reintenta en bucle ante errores de socket, asi que si el robot se
-  desconecta a media ejecucion el script puede quedarse colgado en vez de
-  fallar. Ctrl+C para salir.
-
-## Documentacion
-
-https://fair-documentation.readthedocs.io/en/latest/SDKManual/python_intro.html
+La documentacion `latest` corresponde actualmente al controlador 3.9.9. Para
+este equipo usamos el SDK oficial `v2.2.4_robot_v3.9.4`, porque el controlador
+expone el estado por `20004` y no el protocolo CNDE nuevo en `20005`. Antes de
+incorporar una API del manual actual se debe contrastar con `fairino/Robot.py`.
