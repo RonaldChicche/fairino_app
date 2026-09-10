@@ -1,21 +1,69 @@
-# Entorno virtual (lo gestiona uv)
-.venv/
-
+# ---------------------------------------------------------------------------
 # Python
+# ---------------------------------------------------------------------------
 __pycache__/
 *.py[cod]
 *.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
 
-# SDK vendorizado: se repone con scripts/get_sdk.sh (o .ps1), no se versiona
+# ---------------------------------------------------------------------------
+# Node / Next.js
+# ---------------------------------------------------------------------------
+node_modules/
+.next/
+out/
+.turbo/
+.vercel/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---------------------------------------------------------------------------
+# Video: crudos de la GoPro, proxies .LRV y renders. Nunca se versionan.
+# ---------------------------------------------------------------------------
+*.mp4
+*.MP4
+*.mov
+*.MOV
+*.lrv
+*.LRV
+
+# ---------------------------------------------------------------------------
+# Credenciales y secretos
+# ---------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+service-account*.json
+secrets/
+
+# ---------------------------------------------------------------------------
+# Heredado de las demos (experiments/)
+# ---------------------------------------------------------------------------
+# SDK de FAIRINO vendorizado: se repone con experiments/scripts/get_sdk.sh (o .ps1)
 fairino/
-
-# Fotos descargadas de la GoPro: binarios, no se versionan.
-# La carpeta la crea gopro_demo.py sola cuando hace falta.
+# Fotos descargadas de la GoPro
 capturas/
-
 # Logs que genera el SDK de FAIRINO
 fairino_*.log
 *.log
 
-# macOS
+# ---------------------------------------------------------------------------
+# Sistema
+# ---------------------------------------------------------------------------
 .DS_Store
