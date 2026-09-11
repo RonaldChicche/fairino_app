@@ -64,6 +64,13 @@ fairino_*.log
 *.log
 
 # ---------------------------------------------------------------------------
+# Variables de entorno y datos locales de los experimentos (IDs de AWS, IPs,
+# rutas). Solo se versiona la plantilla .env.example
+# ---------------------------------------------------------------------------
+experiments/env/*
+!experiments/env/.env.example
+
+# ---------------------------------------------------------------------------
 # Sistema
 # ---------------------------------------------------------------------------
 .DS_Store
