@@ -1,0 +1,440 @@
+#!/usr/bin/env bash
+# fr10 — controla la simulación FAIRINO FR10 en EC2 desde cualquier Mac o Linux con AWS CLI.
+#
+#   fr10 up         arranca la instancia, autoriza la IP pública actual de ESTA máquina en los
+#                   puertos de SSH y noVNC (revocando la IP anterior de esta misma máquina),
+#                   espera noVNC y abre el escritorio en el navegador
+#   fr10 down       detiene la instancia (stop; este script nunca hace terminate)
+#   fr10 status     estado, IPs y reglas del security group
+#   fr10 ssh [cmd]  SSH a la instancia (requiere el .pem)
+#   fr10 setup      configuración única en la instancia: autoarranque de la simulación y
+#                   contraseña VNC en SSM Parameter Store (requiere el .pem)
+#   fr10 prune      revoca las reglas de SSH/noVNC de OTRAS máquinas y deja solo la de esta
+#   fr10 env        copia a la instancia (~/fr10.env) la configuración que usan sus scripts
+#   fr10 webapp [up|down|status]
+#                   túnel a la WebApp de FAIRINO SimMachine en http://localhost, con su canal en vivo.
+#                   Usa el puerto 80 local, así que pide sudo. Dura hasta 'fr10 webapp down', un
+#                   reinicio o un corte de red; no cambia ninguna configuración de esta máquina
+#
+# Configuración: variables FR10_* en experiments/env/.env (junto a este script en el repo) o en
+# ~/.config/fr10/.env. Plantilla: experiments/env/.env.example. FR10_ENV_FILE=<ruta> usa otro archivo.
+# Opcional: FR10_NO_BROWSER=1 para no abrir el navegador.
+# Requisitos: bash, curl y AWS CLI v2 autenticado en la cuenta (aws login). El .pem solo para ssh/setup.
+set -euo pipefail
+
+CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/fr10"
+SSH_PORT=22
+# La WebApp de SimMachine arma su canal en vivo como ws://<host de la URL>:<puerto WS>. Si la URL lleva
+# puerto (localhost:18080), esa dirección es inválida y la vista 3D se congela: hay que entrar por el 80
+LOCAL_HTTP_PORT=80
+
+# Los llena load_env desde el .env
+REGION=""
+NAME_TAG=""
+PEM=""
+PASSWORD_PARAM=""
+NOVNC_PORT=""
+PORTS=""
+SSH_OPTS=()
+
+ENV_FILE=""
+IID=""
+SG=""
+
+log() { printf '==> %s\n' "$*" >&2; }
+die() { printf 'fr10: %s\n' "$*" >&2; exit 1; }
+awsr() { aws --region "$REGION" "$@"; }
+
+usage() {
+  awk 'NR == 1 { next } /^#/ { sub(/^# ?/, ""); print; next } { exit }' "$0"
+  exit 2
+}
+
+script_dir() {
+  local src="$0" dir
+  while [ -L "$src" ]; do
+    dir="$(cd "$(dirname "$src")" && pwd)"
+    src="$(readlink "$src")"
+    case "$src" in /*) ;; *) src="$dir/$src" ;; esac
+  done
+  cd "$(dirname "$src")" && pwd
+}
+
+# Falla si alguna de las variables está vacía o conserva un <PLACEHOLDER> de la plantilla
+require_real() {
+  local var value
+  for var in "$@"; do
+    value="${!var:-}"
+    case "$value" in
+      "" | "<"*">") die "$var no tiene un valor real en $ENV_FILE" ;;
+    esac
+  done
+}
+
+load_env() {
+  local file="${FR10_ENV_FILE:-}" candidate
+  if [ -z "$file" ]; then
+    for candidate in "$(script_dir)/../env/.env" "$CONFIG_DIR/.env"; do
+      if [ -r "$candidate" ]; then
+        file="$candidate"
+        break
+      fi
+    done
+  fi
+  if [ -z "$file" ] || [ ! -r "$file" ]; then
+    die "no encuentro el .env: copia experiments/env/.env.example como experiments/env/.env (o ~/.config/fr10/.env) y complétalo"
+  fi
+
+  set -a
+  # shellcheck disable=SC1090
+  . "$file"
+  set +a
+  ENV_FILE="$file"
+
+  require_real FR10_REGION FR10_NAME FR10_PEM FR10_PASSWORD_PARAM FR10_NOVNC_PORT
+  case "$FR10_NOVNC_PORT" in
+    *[!0-9]*) die "FR10_NOVNC_PORT debe ser un número (vale '$FR10_NOVNC_PORT' en $file)" ;;
+  esac
+
+  REGION="$FR10_REGION"
+  NAME_TAG="$FR10_NAME"
+  PEM="$FR10_PEM"
+  PASSWORD_PARAM="$FR10_PASSWORD_PARAM"
+  NOVNC_PORT="$FR10_NOVNC_PORT"
+  PORTS="$SSH_PORT $NOVNC_PORT"
+  # La IP de la instancia cambia en cada arranque: la clave de host se guarda bajo un alias fijo
+  SSH_OPTS=(-i "$PEM" -o HostKeyAlias="$NAME_TAG" -o UserKnownHostsFile="$CONFIG_DIR/known_hosts"
+            -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15)
+}
+
+# Identificador estable de esta máquina; va en la descripción de sus reglas del security group
+client_id() {
+  local f="$CONFIG_DIR/client-id" host
+  if [ ! -s "$f" ]; then
+    mkdir -p "$CONFIG_DIR"
+    host="$(hostname -s 2>/dev/null | tr -cd 'A-Za-z0-9-' | cut -c1-24)"
+    printf '%s-%s\n' "${host:-pc}" "$(od -An -N3 -tx1 /dev/urandom | tr -d ' \n')" > "$f"
+  fi
+  cat "$f"
+}
+
+require_aws() {
+  command -v aws > /dev/null || die "falta AWS CLI v2 (https://aws.amazon.com/cli/)"
+  command -v curl > /dev/null || die "falta curl"
+  awsr sts get-caller-identity --query Arn --output text > /dev/null 2>&1 \
+    || die "credenciales AWS inválidas o expiradas: ejecuta 'aws login' y reintenta"
+}
+
+resolve_instance() {
+  local out
+  out="$(awsr ec2 describe-instances \
+    --filters "Name=tag:Name,Values=$NAME_TAG" "Name=instance-state-name,Values=pending,running,stopping,stopped" \
+    --query 'Reservations[].Instances[].[InstanceId,SecurityGroups[0].GroupId]' --output text)"
+  [ -n "$out" ] || die "no hay ninguna instancia con Name=$NAME_TAG en $REGION"
+  [ "$(printf '%s\n' "$out" | wc -l | tr -d ' ')" = 1 ] || die "hay más de una instancia con Name=$NAME_TAG"
+  IID="$(printf '%s' "$out" | cut -f1)"
+  SG="$(printf '%s' "$out" | cut -f2)"
+}
+
+describe() {
+  awsr ec2 describe-instances --instance-ids "$IID" --query "Reservations[0].Instances[0].$1" --output text
+}
+
+running_ip() {
+  [ "$(describe State.Name)" = running ] || die "la instancia no está corriendo: ejecuta 'fr10 up'"
+  describe PublicIpAddress
+}
+
+my_ip() {
+  local url ip
+  for url in https://checkip.amazonaws.com https://api.ipify.org; do
+    ip="$(curl -fsS --max-time 10 "$url" 2>/dev/null | tr -d '[:space:]')" || ip=""
+    if [[ "$ip" =~ ^[0-9]{1,3}(\.[0-9]{1,3}){3}$ ]]; then
+      printf '%s\n' "$ip"
+      return 0
+    fi
+  done
+  die "no pude obtener la IP pública de esta máquina"
+}
+
+# Deja exactamente una regla por puerto para esta máquina, con su IP actual
+sync_rules() {
+  local ip="$1" desc port rule_id cidr keep
+  desc="fr10:$(client_id)"
+  for port in $PORTS; do
+    keep=""
+    while read -r rule_id cidr; do
+      [ -n "${rule_id:-}" ] || continue
+      if [ "$cidr" = "$ip/32" ]; then
+        keep=1
+      else
+        log "puerto $port: revocando la IP anterior de esta máquina ($cidr)"
+        awsr ec2 revoke-security-group-ingress --group-id "$SG" --security-group-rule-ids "$rule_id" > /dev/null
+      fi
+    done <<< "$(awsr ec2 describe-security-group-rules --filters "Name=group-id,Values=$SG" \
+      --query "SecurityGroupRules[?!IsEgress && FromPort==\`$port\` && Description=='$desc'].[SecurityGroupRuleId,CidrIpv4]" \
+      --output text)"
+    [ -z "$keep" ] || continue
+
+    # Otra máquina en la misma red puede haber autorizado ya esta IP (AWS rechaza reglas duplicadas)
+    if [ -n "$(awsr ec2 describe-security-group-rules --filters "Name=group-id,Values=$SG" \
+      --query "SecurityGroupRules[?!IsEgress && FromPort==\`$port\` && CidrIpv4=='$ip/32'].SecurityGroupRuleId" \
+      --output text)" ]; then
+      log "puerto $port: $ip/32 ya está autorizada por otra regla"
+      continue
+    fi
+    log "puerto $port: autorizando $ip/32"
+    awsr ec2 authorize-security-group-ingress --group-id "$SG" \
+      --ip-permissions "IpProtocol=tcp,FromPort=$port,ToPort=$port,IpRanges=[{CidrIp=$ip/32,Description=$desc}]" > /dev/null
+  done
+}
+
+open_url() {
+  if [ -n "${FR10_NO_BROWSER:-}" ]; then
+    return 0
+  elif [ "$(uname -s)" = Darwin ]; then
+    open "$1"
+  elif command -v xdg-open > /dev/null; then
+    xdg-open "$1" > /dev/null 2>&1 || true
+  fi
+}
+
+cmd_up() {
+  require_aws
+  resolve_instance
+  local state ip myip pw url i
+  state="$(describe State.Name)"
+  if [ "$state" = stopping ]; then
+    log "la instancia se está deteniendo; esperando a que termine..."
+    awsr ec2 wait instance-stopped --instance-ids "$IID"
+    state=stopped
+  fi
+
+  myip="$(my_ip)"
+  log "IP pública de esta máquina: $myip (cliente $(client_id))"
+  sync_rules "$myip"
+
+  if [ "$state" = stopped ]; then
+    log "arrancando $IID..."
+    awsr ec2 start-instances --instance-ids "$IID" > /dev/null
+  fi
+  awsr ec2 wait instance-running --instance-ids "$IID"
+  ip="$(describe PublicIpAddress)"
+  log "IP pública de la instancia: $ip"
+
+  log "esperando noVNC en http://$ip:$NOVNC_PORT (hasta 5 min)..."
+  for i in $(seq 1 60); do
+    if curl -fsS -o /dev/null --max-time 5 "http://$ip:$NOVNC_PORT/" 2> /dev/null; then
+      break
+    fi
+    [ "$i" != 60 ] || die "noVNC no respondió; revisa con: fr10 ssh 'systemctl status fr10-novnc fr10-sim'"
+    sleep 5
+  done
+
+  url="http://$ip:$NOVNC_PORT/vnc.html?autoconnect=true&resize=scale"
+  pw="$(awsr ssm get-parameter --name "$PASSWORD_PARAM" --with-decryption \
+    --query Parameter.Value --output text 2> /dev/null || true)"
+  echo
+  echo "  Escritorio (RViz):  $url"
+  if [ -n "$pw" ]; then
+    echo "  Contraseña VNC:     $pw"
+    if command -v pbcopy > /dev/null; then
+      printf '%s' "$pw" | pbcopy
+      echo "                      (copiada al portapapeles)"
+    fi
+  else
+    echo "  Contraseña VNC: no está en SSM ($PASSWORD_PARAM); ejecuta 'fr10 setup' desde la máquina con el .pem"
+  fi
+  echo "  La simulación arranca sola ~1 min después del encendido. Apagado automático a las 5 h."
+  echo "  Para apagar:  fr10 down"
+  echo
+  open_url "$url"
+}
+
+cmd_down() {
+  require_aws
+  resolve_instance
+  if [ "$(describe State.Name)" = stopped ]; then
+    log "$IID ya está detenida"
+    return 0
+  fi
+  log "deteniendo $IID (stop, no terminate)..."
+  awsr ec2 stop-instances --instance-ids "$IID" > /dev/null
+  awsr ec2 wait instance-stopped --instance-ids "$IID"
+  log "estado: $(describe State.Name)"
+}
+
+cmd_status() {
+  require_aws
+  resolve_instance
+  echo "Instancia:       $IID ($NAME_TAG, $REGION)"
+  echo "Estado:          $(describe State.Name)"
+  echo "IP instancia:    $(describe PublicIpAddress)"
+  echo "Security group:  $SG"
+  echo "Esta máquina:    $(my_ip)  (reglas con descripción fr10:$(client_id))"
+  echo "Reglas de entrada (puerto, origen, descripción):"
+  awsr ec2 describe-security-group-rules --filters "Name=group-id,Values=$SG" \
+    --query 'SecurityGroupRules[?!IsEgress].[FromPort,CidrIpv4,Description]' --output text | sort -n | sed 's/^/  /'
+}
+
+cmd_ssh() {
+  require_aws
+  resolve_instance
+  [ -r "$PEM" ] || die "no encuentro el .pem en $PEM (FR10_PEM en el .env)"
+  local ip
+  ip="$(running_ip)"
+  mkdir -p "$CONFIG_DIR"
+  exec ssh "${SSH_OPTS[@]}" "ubuntu@$ip" "$@"
+}
+
+# Copia a la instancia solo las variables que leen sus scripts (02, 03 y 05)
+push_env() {
+  local ip="$1"
+  require_real FR10_NOVNC_PORT FR10_VNC_PORT FR10_SCREEN FR10_AUTOSHUTDOWN_MIN FR10_MAINTAINER_EMAIL
+  case "$FR10_VNC_PORT$FR10_AUTOSHUTDOWN_MIN" in
+    *[!0-9]*) die "FR10_VNC_PORT y FR10_AUTOSHUTDOWN_MIN deben ser números" ;;
+  esac
+  [[ "$FR10_SCREEN" =~ ^[0-9]+x[0-9]+$ ]] || die "FR10_SCREEN debe tener la forma ANCHOxALTO (vale '$FR10_SCREEN')"
+  log "copiando la configuración de la instancia a ~/fr10.env..."
+  printf '# Generado por `fr10 env` desde %s. No editar a mano: se sobrescribe.\nFR10_NOVNC_PORT="%s"\nFR10_VNC_PORT="%s"\nFR10_SCREEN="%s"\nFR10_AUTOSHUTDOWN_MIN="%s"\nFR10_MAINTAINER_EMAIL="%s"\n' \
+    "$ENV_FILE" "$FR10_NOVNC_PORT" "$FR10_VNC_PORT" "$FR10_SCREEN" "$FR10_AUTOSHUTDOWN_MIN" "$FR10_MAINTAINER_EMAIL" \
+    | ssh "${SSH_OPTS[@]}" "ubuntu@$ip" 'umask 077 && cat > ~/fr10.env'
+}
+
+cmd_env() {
+  require_aws
+  resolve_instance
+  [ -r "$PEM" ] || die "no encuentro el .pem en $PEM (FR10_PEM en el .env)"
+  mkdir -p "$CONFIG_DIR"
+  push_env "$(running_ip)"
+  log "listo"
+}
+
+cmd_setup() {
+  require_aws
+  resolve_instance
+  [ -r "$PEM" ] || die "no encuentro el .pem en $PEM (FR10_PEM en el .env)"
+  local ip dir pw
+  ip="$(running_ip)"
+  dir="$(script_dir)/scripts"
+  [ -r "$dir/05_autostart.sh" ] || die "no encuentro $dir/05_autostart.sh"
+  mkdir -p "$CONFIG_DIR"
+  push_env "$ip"
+
+  log "copiando scripts y configurando el autoarranque en la instancia..."
+  scp -q "${SSH_OPTS[@]}" "$dir/04_sim.sh" "$dir/05_autostart.sh" "ubuntu@$ip:"
+  ssh "${SSH_OPTS[@]}" "ubuntu@$ip" 'chmod +x ~/04_sim.sh ~/05_autostart.sh && ~/05_autostart.sh'
+
+  log "guardando la contraseña VNC en SSM Parameter Store ($PASSWORD_PARAM, SecureString)..."
+  pw="$(ssh "${SSH_OPTS[@]}" "ubuntu@$ip" 'cat ~/.vnc/password.txt')"
+  awsr ssm put-parameter --name "$PASSWORD_PARAM" --type SecureString --value "$pw" --overwrite > /dev/null
+  log "listo"
+}
+
+cmd_prune() {
+  require_aws
+  resolve_instance
+  local desc rules
+  desc="fr10:$(client_id)"
+  rules="$(awsr ec2 describe-security-group-rules --filters "Name=group-id,Values=$SG" \
+    --query "SecurityGroupRules[?!IsEgress && (FromPort==\`$SSH_PORT\` || FromPort==\`$NOVNC_PORT\`) && Description!='$desc'].[SecurityGroupRuleId,FromPort,CidrIpv4,Description]" \
+    --output text)"
+  if [ -z "$rules" ]; then
+    log "no hay reglas de otras máquinas"
+    return 0
+  fi
+  printf '%s\n' "$rules" | sed 's/^/  revocando: /' >&2
+  # shellcheck disable=SC2046
+  awsr ec2 revoke-security-group-ingress --group-id "$SG" \
+    --security-group-rule-ids $(printf '%s\n' "$rules" | cut -f1) > /dev/null
+  log "listo"
+}
+
+# PIDs de los túneles a la WebApp abiertos en esta máquina (corren como root por el puerto 80)
+webapp_tunnel_pids() {
+  { pgrep -f "ssh .*-L $LOCAL_HTTP_PORT:$FR10_SIM_IP:$FR10_WEBAPP_PORT( |$)" || true; } | tr '\n' ' ' | sed 's/ $//'
+}
+
+webapp_responds() {
+  curl -fsS -o /dev/null --max-time 5 "http://localhost:$LOCAL_HTTP_PORT/login.html" 2> /dev/null
+}
+
+cmd_webapp() {
+  local action="${1:-up}" pids ip i url="http://localhost/"
+  require_real FR10_SIM_IP FR10_WEBAPP_PORT FR10_WEBAPP_WS_PORT
+  case "$FR10_WEBAPP_PORT$FR10_WEBAPP_WS_PORT" in
+    *[!0-9]*) die "FR10_WEBAPP_PORT y FR10_WEBAPP_WS_PORT deben ser números" ;;
+  esac
+  pids="$(webapp_tunnel_pids)"
+
+  case "$action" in
+    status)
+      if [ -z "$pids" ]; then
+        echo "Túnel a la WebApp: cerrado"
+      elif webapp_responds; then
+        echo "Túnel a la WebApp: abierto (pid $pids) → $url"
+      else
+        echo "Túnel a la WebApp: abierto (pid $pids), pero la WebApp no responde. Prueba 'fr10 webapp down' y 'fr10 webapp up'"
+      fi
+      ;;
+    down)
+      if [ -z "$pids" ]; then
+        log "no hay ningún túnel a la WebApp abierto"
+        return 0
+      fi
+      log "cerrando el túnel (pid $pids); sudo puede pedir la contraseña de esta máquina..."
+      # shellcheck disable=SC2086
+      sudo kill $pids
+      log "listo"
+      ;;
+    up)
+      if [ -n "$pids" ]; then
+        webapp_responds || die "hay un túnel abierto (pid $pids), pero la WebApp no responde (¿cambió la IP de la instancia?): ejecuta 'fr10 webapp down' y vuelve a intentar"
+        log "el túnel ya estaba abierto"
+      else
+        require_aws
+        resolve_instance
+        [ -r "$PEM" ] || die "no encuentro el .pem en $PEM (FR10_PEM en el .env)"
+        ip="$(running_ip)"
+        # Se crean como usuario: si los creara ssh bajo sudo, quedarían de root
+        mkdir -p "$CONFIG_DIR"
+        touch "$CONFIG_DIR/known_hosts"
+        log "abriendo túnel: localhost:$LOCAL_HTTP_PORT y localhost:$FR10_WEBAPP_WS_PORT → $FR10_SIM_IP en $ip"
+        log "el puerto $LOCAL_HTTP_PORT local exige sudo: puede pedir la contraseña de esta máquina"
+        sudo ssh "${SSH_OPTS[@]}" -o ExitOnForwardFailure=yes -f -N \
+          -L "$LOCAL_HTTP_PORT:$FR10_SIM_IP:$FR10_WEBAPP_PORT" \
+          -L "$FR10_WEBAPP_WS_PORT:$FR10_SIM_IP:$FR10_WEBAPP_WS_PORT" "ubuntu@$ip" \
+          || die "no pude abrir el túnel. Si un puerto está ocupado, revisa: sudo lsof -nP -iTCP:$LOCAL_HTTP_PORT -iTCP:$FR10_WEBAPP_WS_PORT -sTCP:LISTEN"
+        for i in $(seq 1 10); do
+          webapp_responds && break
+          [ "$i" != 10 ] || die "el túnel está abierto, pero la WebApp no responde. ¿Corre SimMachine? Revisa: fr10 ssh 'sudo docker ps'"
+          sleep 1
+        done
+      fi
+      echo
+      echo "  WebApp SimMachine:     $url"
+      echo "  Usuario y contraseña:  FR10_WEBAPP_USER y FR10_WEBAPP_PASSWORD en $ENV_FILE"
+      echo "  El túnel sigue abierto hasta 'fr10 webapp down', un reinicio o un corte de red."
+      echo "  No cambia ninguna configuración: cerrado el túnel, localhost vuelve a no responder."
+      echo
+      open_url "$url"
+      ;;
+    *) usage ;;
+  esac
+}
+
+case "${1:-}" in
+  up | down | status | ssh | setup | prune | env | webapp) load_env ;;
+  *) usage ;;
+esac
+
+case "$1" in
+  up) cmd_up ;;
+  down) cmd_down ;;
+  status) cmd_status ;;
+  ssh) shift; cmd_ssh "$@" ;;
+  setup) cmd_setup ;;
+  prune) cmd_prune ;;
+  env) cmd_env ;;
+  webapp) shift; cmd_webapp "$@" ;;
+esac
