@@ -1,0 +1,104 @@
+{
+  "name": "grua-equivalente",
+  "target": [
+    -900,
+    0,
+    350
+  ],
+  "subject_height": 1700,
+  "camera": {
+    "fov_h_deg": 55,
+    "offset_mm": 100
+  },
+  "motion": {
+    "speed": 20.0,
+    "acc": 50.0,
+    "blend_mm": 10.0,
+    "camera_timeout_s": 30
+  },
+  "seed_joints": [
+    -16.174,
+    73.763,
+    -119.759,
+    -158.052,
+    -75.165,
+    6.518
+  ],
+  "waypoints": [
+    {
+      "id": 1,
+      "offset": [
+        350.0,
+        0.0,
+        -150.0
+      ]
+    },
+    {
+      "id": 2,
+      "offset": [
+        350.0,
+        0.0,
+        -70.0
+      ]
+    },
+    {
+      "id": 3,
+      "offset": [
+        350.0,
+        0.0,
+        10.0
+      ]
+    },
+    {
+      "id": 4,
+      "offset": [
+        350.0,
+        0.0,
+        90.0
+      ]
+    },
+    {
+      "id": 5,
+      "offset": [
+        350.0,
+        0.0,
+        170.0
+      ]
+    },
+    {
+      "id": 6,
+      "offset": [
+        350.0,
+        0.0,
+        250.0
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "from": 1,
+      "to": 2,
+      "type": "line"
+    },
+    {
+      "from": 2,
+      "to": 3,
+      "type": "line"
+    },
+    {
+      "from": 3,
+      "to": 4,
+      "type": "line"
+    },
+    {
+      "from": 4,
+      "to": 5,
+      "type": "line"
+    },
+    {
+      "from": 5,
+      "to": 6,
+      "type": "line"
+    }
+  ]
+}

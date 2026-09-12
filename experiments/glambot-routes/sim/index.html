@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Simulador de toma</title>
+<style>
+  :root { color-scheme: dark; --bg:#14161a; --panel:#1c1f26; --line:#2c313b; --ink:#e6e9ef; --dim:#98a2b3; --acc:#f08c00; }
+  * { box-sizing: border-box; }
+  body { margin:0; height:100vh; display:flex; flex-direction:column; background:var(--bg); color:var(--ink);
+         font:14px/1.45 -apple-system, system-ui, sans-serif; overflow:hidden; }
+  header { display:flex; gap:10px; align-items:center; padding:8px 12px; border-bottom:1px solid var(--line); }
+  header h1 { font-size:14px; margin:0 12px 0 0; font-weight:600; letter-spacing:.02em; }
+  main { flex:1; display:flex; min-height:0; }
+  #view3d { flex:1; position:relative; min-width:0; }
+  #lensWrap { width:300px; padding:12px; border-left:1px solid var(--line); display:flex; flex-direction:column; gap:8px; }
+  #lens { width:276px; height:490px; background:#000; border:1px solid var(--line); }
+  aside { width:330px; border-left:1px solid var(--line); padding:12px; overflow-y:auto; background:var(--panel); }
+  h2 { font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--dim); margin:16px 0 8px; }
+  h2:first-child { margin-top:0; }
+  label { display:flex; align-items:center; gap:8px; margin:6px 0; font-size:12px; color:var(--dim); }
+  label span { width:92px; flex:none; }
+  input[type=range] { flex:1; min-width:0; accent-color:var(--acc); }
+  input[type=number], input[type=text] { background:#0f1115; color:var(--ink); border:1px solid var(--line);
+    border-radius:4px; padding:4px 6px; font:inherit; font-size:12px; min-width:0; }
+  .val { width:56px; text-align:right; font-variant-numeric:tabular-nums; color:var(--ink); flex:none; }
+  input.val { width:66px; padding:3px 5px; font-size:12px; }
+  input.val:focus { outline:1px solid var(--acc); }
+  .u { flex:none; width:22px; font-style:normal; font-size:11px; color:var(--dim); }
+  button { background:#252a33; color:var(--ink); border:1px solid var(--line); border-radius:5px;
+    padding:5px 10px; font:inherit; font-size:12px; cursor:pointer; }
+  button:hover { background:#2f3540; }
+  button.primary { background:var(--acc); border-color:var(--acc); color:#1a1206; font-weight:600; }
+  .wp { display:flex; align-items:center; gap:6px; padding:5px 7px; border:1px solid var(--line);
+        border-radius:5px; margin-bottom:4px; cursor:pointer; font-size:12px; }
+  .wp.sel { border-color:var(--acc); background:#2a2213; }
+  .wp.over { border-color:#69db7c; background:#16281b; }
+  .wp.bad { border-color:#ff6b6b; background:#2b1517; }
+  .wp.bad .pos { color:#ff8787; }
+  .wp.dragging { opacity:.4; }
+  .wp .grip { color:var(--dim); cursor:grab; flex:none; letter-spacing:-2px; }
+  .wp .n { width:18px; color:var(--dim); flex:none; }
+  .wp .pos { flex:1; color:var(--dim); font-variant-numeric:tabular-nums; font-size:11px; }
+  .seg { display:flex; align-items:center; gap:6px; margin:0 0 4px 22px; font-size:11px; color:var(--dim); }
+  .seg select, .seg input { font-size:11px; padding:2px 4px; }
+  .seg input[type=number] { width:52px; }
+  #msg { margin-left:auto; font-size:12px; color:var(--dim); max-width:420px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #msg.err { color:#ff8787; }
+  #msg.ok { color:#69db7c; }
+  .hint { color:var(--dim); font-size:11px; margin:6px 0 0; }
+  kbd { background:#0f1115; border:1px solid var(--line); border-radius:3px; padding:0 4px; font-size:11px; }
+</style>
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+</head>
+<body>
+
+<header>
+  <h1>Simulador de toma</h1>
+  <input type="text" id="name" value="ruta-nueva" size="16">
+  <button id="save">Guardar</button>
+  <button id="generate" class="primary">Generar Lua</button>
+  <select id="load"><option value="">cargar…</option></select>
+  <button id="play">▶ Reproducir</button>
+  <span id="msg"></span>
+</header>
+
+<main>
+  <div id="view3d"></div>
+  <div id="lensWrap">
+    <canvas id="lens"></canvas>
+    <div class="hint">Lo que vería la cámara · 9:16<br>
+      Arrastra aquí para mover la cámara, rueda para acercar.<br>
+      <kbd>G</kbd> marca un punto · <kbd>espacio</kbd> reproduce</div>
+  </div>
+  <aside>
+    <h2>Cámara</h2>
+    <label><span>Distancia</span><input type="range" id="dist" min="150" max="1500" step="5"><b class="val" id="distV"></b></label>
+    <label><span>Azimut</span><input type="range" id="az" min="-180" max="180" step="1"><b class="val" id="azV"></b></label>
+    <label><span>Elevación</span><input type="range" id="el" min="-85" max="85" step="1"><b class="val" id="elV"></b></label>
+    <label><span>Campo visión</span><input type="range" id="fov" min="20" max="110" step="1"><b class="val" id="fovV"></b></label>
+
+    <h2>Escena</h2>
+    <label><span>Objetivo X</span><input type="range" id="tx" min="-1400" max="1400" step="10"><b class="val" id="txV"></b></label>
+    <label><span>Objetivo Y</span><input type="range" id="ty" min="-1400" max="1400" step="10"><b class="val" id="tyV"></b></label>
+    <label><span>Alto persona</span><input type="range" id="sh" min="300" max="2100" step="10"><b class="val" id="shV"></b></label>
+    <label><span>Pedestal</span><input type="range" id="mount" min="0" max="1800" step="10"><b class="val" id="mountV"></b></label>
+    <label><span>Ajuste Z mira</span><input type="range" id="aimz" min="-800" max="800" step="10"><b class="val" id="aimzV"></b></label>
+    <p class="hint">La cámara apunta a la cabeza; el ajuste Z mueve la mira arriba o abajo de ella.
+      El punto naranja es el objetivo que se manda al robot. La malla es el alcance del brazo:
+      todo punto fuera de ella es imposible y sale en rojo.</p>
+
+    <h2>Puntos <button id="mark" style="float:right">+ marcar (G)</button></h2>
+    <div id="list"></div>
+    <p class="hint" id="empty">Mueve la cámara y pulsa <kbd>G</kbd> para marcar el primer punto.</p>
+    <div id="wpEdit" style="display:none">
+      <label><span>Punto X</span><input type="range" id="wx" min="-1500" max="1500" step="5"><b class="val" id="wxV"></b></label>
+      <label><span>Punto Y</span><input type="range" id="wy" min="-1500" max="1500" step="5"><b class="val" id="wyV"></b></label>
+      <label><span>Punto Z</span><input type="range" id="wz" min="-1500" max="1500" step="5"><b class="val" id="wzV"></b></label>
+      <p class="hint">Posición del punto seleccionado respecto al objetivo, por ejes.</p>
+    </div>
+
+    <h2>Ejecución</h2>
+    <label><span>Velocidad %</span><input type="range" id="speed" min="5" max="100" step="5"><b class="val" id="speedV"></b></label>
+    <label><span>Blend mm</span><input type="range" id="blend" min="-1" max="50" step="1"><b class="val" id="blendV"></b></label>
+    <label><span>Offset cámara</span><input type="range" id="coff" min="0" max="300" step="5"><b class="val" id="coffV"></b></label>
+    <label><span>Semilla IK</span><input type="text" id="seed" placeholder="6 ángulos de planner.py"></label>
+    <p class="hint">La semilla sale de <code>planner.py</code>, que corre en la instancia contra el
+      controlador. Sin ella se guarda la ruta igual, pero no se genera el Lua.</p>
+    <label><span>Vista previa s</span><input type="range" id="dur" min="4" max="60" step="1"><b class="val" id="durV"></b></label>
+    <p class="hint">Solo afecta la reproducción en pantalla. No predice cuánto tarda el robot.</p>
+  </aside>
+</main>
+
+<script type="module">
+import * as THREE from "three";
+
+THREE.Object3D.DEFAULT_UP = new THREE.Vector3(0, 0, 1);   // eje Z arriba, como FAIRINO
+
+// ── Estado: es exactamente el JSON que se guarda y que lee routes.py ───────────
+const spec = {
+  name: "ruta-nueva",
+  target: [-900, 0, 589.5],           // la cabeza, en coordenadas de la BASE del robot
+  subject_height: 1700,
+  aim_z_offset: 0,                    // sube o baja la mira respecto a la cabeza
+  robot: { mount_z: 1000, reach_mm: 1400 },   // altura del pedestal y alcance del FR10
+  camera: { fov_h_deg: 55, offset_mm: 100 },
+  motion: { speed: 20, acc: 50, blend_mm: 10, camera_timeout_s: 30 },
+  seed_joints: null,
+  waypoints: [],
+  segments: [],
+};
+const ui = { dist: 900, az: 0, el: -5, dur: 28, selected: null, playing: false, t0: 0 };
+let dragFrom = null;
+let nextId = 1;
+
+const $ = id => document.getElementById(id);
+const msg = (text, kind = "") => { const m = $("msg"); m.textContent = text; m.className = kind; };
+const target = () => new THREE.Vector3(...spec.target);
+
+// ── Escena ────────────────────────────────────────────────────────────────────
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x14161a);
+scene.add(new THREE.HemisphereLight(0xbfd4ff, 0x30302c, 2.2));
+const sun = new THREE.DirectionalLight(0xffffff, 1.2); sun.position.set(1200, 900, 2000); scene.add(sun);
+
+const grid = new THREE.GridHelper(6000, 30, 0x39414f, 0x252a33);
+grid.rotation.x = Math.PI / 2;                       // de plano XZ a plano XY
+scene.add(grid);
+const axes = new THREE.AxesHelper(300);               // base del robot, en el origen
+scene.add(axes);
+
+// La cabeza es el objetivo: su centro está a HEAD_FRAC de la altura total.
+const HEAD_FRAC = 0.935;
+
+const person = new THREE.Group();
+const skin = new THREE.MeshLambertMaterial({ color: 0x6d8bb5 });
+const legs = new THREE.Mesh(new THREE.CylinderGeometry(1, 1.2, 1, 14), skin);
+const torso = new THREE.Mesh(new THREE.CylinderGeometry(1, 0.85, 1, 16), skin);
+const head = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 14), skin);
+legs.rotation.x = torso.rotation.x = Math.PI / 2;     // los cilindros de three son Y arriba
+person.add(legs, torso, head);
+scene.add(person);
+
+// Se dibuja por encima de todo para no perderlo dentro de la cabeza
+const targetDot = new THREE.Mesh(new THREE.SphereGeometry(26, 16, 12),
+  new THREE.MeshBasicMaterial({ color: 0xf08c00, depthTest: false }));
+targetDot.renderOrder = 2;
+scene.add(targetDot);
+
+// Alcance del brazo: esfera centrada en la base. No es cinemática, es solo la distancia máxima,
+// así que entrar en la esfera es necesario pero no suficiente: planner.py sigue teniendo la última palabra.
+const reachBall = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 16),
+  new THREE.MeshBasicMaterial({ color: 0x4d5f7a, wireframe: true, transparent: true, opacity: 0.18 }));
+scene.add(reachBall);
+
+// La brida va camera_offset mm por detrás de la cámara sobre el eje óptico, que apunta al objetivo
+const flangeReach = offset => {
+  const v = new THREE.Vector3(...offset), len = v.length() || 1;
+  return v.multiplyScalar(1 + spec.camera.offset_mm / len).add(target()).length();
+};
+
+const pathLine = new THREE.Line(new THREE.BufferGeometry(),
+  new THREE.LineBasicMaterial({ color: 0xf08c00 }));
+scene.add(pathLine);
+const marks = new THREE.Group(); scene.add(marks);
+
+// ── Cámaras ───────────────────────────────────────────────────────────────────
+const shotCam = new THREE.PerspectiveCamera(60, 9 / 16, 10, 30000);
+const gizmoCam = new THREE.PerspectiveCamera(60, 9 / 16, 10, 400);   // cono corto, solo para dibujarlo
+const shotHelper = new THREE.CameraHelper(gizmoCam); scene.add(shotHelper);
+const viewCam = new THREE.PerspectiveCamera(50, 1, 10, 40000);
+const orbit = { az: 35, el: 22, dist: 3200 };
+
+const view3d = $("view3d");
+const rView = new THREE.WebGLRenderer({ antialias: true }); view3d.appendChild(rView.domElement);
+const rLens = new THREE.WebGLRenderer({ antialias: true, canvas: $("lens") });
+
+// La distancia es del punto de la CÁMARA al objetivo; el visor trabaja en espacio de cámara
+// y routes.py convierte a brida al generar el Lua.
+function offsetFrom(dist, azDeg, elDeg) {
+  const az = azDeg * Math.PI / 180, el = elDeg * Math.PI / 180;
+  return new THREE.Vector3(dist * Math.cos(el) * Math.cos(az),
+                           dist * Math.cos(el) * Math.sin(az),
+                           dist * Math.sin(el));
+}
+function placeShotCam() {
+  shotCam.position.copy(target()).add(offsetFrom(ui.dist, ui.az, ui.el));
+  shotCam.lookAt(target());
+  const h = spec.camera.fov_h_deg * Math.PI / 180;
+  shotCam.fov = 2 * Math.atan(Math.tan(h / 2) / (9 / 16)) * 180 / Math.PI;  // three usa FOV vertical
+  shotCam.updateProjectionMatrix();
+  gizmoCam.position.copy(shotCam.position);
+  gizmoCam.quaternion.copy(shotCam.quaternion);
+  gizmoCam.fov = shotCam.fov;
+  gizmoCam.updateProjectionMatrix();
+  gizmoCam.updateMatrixWorld();
+  shotHelper.update();
+}
+
+// ── Geometría del arco: el mismo criterio que arc_offsets() de routes.py ───────
+function chordNormal(a, b) {
+  const u = b.clone().sub(a);
+  if (u.length() < 1e-6) return new THREE.Vector3(0, 0, 1);
+  u.normalize();
+  const mid = a.clone().add(b).multiplyScalar(0.5);
+  let radial = mid.clone().sub(u.clone().multiplyScalar(mid.dot(u)));
+  if (radial.length() < 1e-4) {
+    const up = new THREE.Vector3(0, 0, 1);
+    radial = up.clone().sub(u.clone().multiplyScalar(up.dot(u)));
+  }
+  return radial.normalize();
+}
+function densify() {
+  const pts = [];
+  spec.waypoints.forEach((w, i) => {
+    const a = new THREE.Vector3(...w.offset);
+    pts.push(a);
+    const next = spec.waypoints[i + 1];
+    if (!next) return;
+    const b = new THREE.Vector3(...next.offset);
+    const seg = segmentBetween(w.id, next.id);
+    if (seg.type !== "arc" || Math.abs(seg.bulge_mm) < 1e-6) return;
+    const mid = a.clone().add(b).multiplyScalar(0.5);
+    const via = mid.clone().add(chordNormal(a, b).multiplyScalar(seg.bulge_mm));
+    const ctrl = via.clone().multiplyScalar(2).sub(mid);
+    for (let k = 1; k <= seg.samples; k++) {
+      const t = k / (seg.samples + 1), s = 1 - t;
+      pts.push(a.clone().multiplyScalar(s * s)
+        .add(ctrl.clone().multiplyScalar(2 * s * t))
+        .add(b.clone().multiplyScalar(t * t)));
+    }
+  });
+  return pts;
+}
+function segmentBetween(from, to) {
+  let seg = spec.segments.find(s => s.from === from && s.to === to);
+  if (!seg) { seg = { from, to, type: "line", bulge_mm: 0, samples: 6 }; spec.segments.push(seg); }
+  return seg;
+}
+
+// ── Dibujo de la ruta y de la lista ───────────────────────────────────────────
+function refresh() {
+  // Proporciones de una persona de pie: piernas hasta 0.47 de la altura, torso hasta 0.87, cabeza arriba
+  const H = spec.subject_height;
+  grid.position.z = -spec.robot.mount_z;              // el suelo baja: el origen es la base del brazo
+  reachBall.scale.setScalar(spec.robot.reach_mm);
+  person.position.set(spec.target[0], spec.target[1], -spec.robot.mount_z);
+  legs.scale.set(0.055 * H, 0.47 * H, 0.055 * H);
+  legs.position.z = 0.235 * H;
+  torso.scale.set(0.135 * H, 0.40 * H, 0.085 * H);    // hombros ~0.27 de la altura de ancho
+  torso.position.z = 0.67 * H;
+  head.scale.setScalar((1 - HEAD_FRAC) * H);
+  head.position.z = HEAD_FRAC * H;
+  targetDot.position.copy(target());
+
+  const world = densify().map(o => o.clone().add(target()));
+  pathLine.geometry.dispose();
+  pathLine.geometry = new THREE.BufferGeometry().setFromPoints(world.length > 1 ? world : []);
+
+  const far = spec.waypoints.map(w => flangeReach(w.offset) > spec.robot.reach_mm);
+  marks.clear();
+  spec.waypoints.forEach((w, i) => {
+    const color = far[i] ? 0xff6b6b : (i === ui.selected ? 0xffd43b : 0x69db7c);
+    const m = new THREE.Mesh(new THREE.SphereGeometry(i === ui.selected ? 42 : 30, 14, 10),
+      new THREE.MeshBasicMaterial({ color }));
+    m.position.copy(new THREE.Vector3(...w.offset)).add(target());
+    marks.add(m);
+  });
+  const fuera = far.filter(Boolean).length;
+  if (fuera) msg(`${fuera} punto(s) fuera del alcance de ${spec.robot.reach_mm} mm`, "err");
+
+  const list = $("list"); list.innerHTML = "";
+  $("empty").style.display = spec.waypoints.length ? "none" : "block";
+  $("wpEdit").style.display = ui.selected === null ? "none" : "block";
+  pruneSegments();
+  spec.waypoints.forEach((w, i) => {
+    const row = document.createElement("div");
+    row.className = "wp" + (i === ui.selected ? " sel" : "") + (far[i] ? " bad" : "");
+    if (far[i]) row.title = `la brida necesita ${Math.round(flangeReach(w.offset))} mm y el brazo llega a ${spec.robot.reach_mm}`;
+    row.draggable = true;
+    row.innerHTML = `<span class="grip">⠿</span><span class="n">${i + 1}</span>
+      <span class="pos">${w.offset.map(v => Math.round(v)).join(", ")} mm</span>`;
+    const del = document.createElement("button");
+    del.textContent = "✕";
+    del.onclick = e => { e.stopPropagation(); removeWaypoint(i); };
+    row.appendChild(del);
+    row.onclick = () => selectWaypoint(i);
+    row.addEventListener("dragstart", e => {
+      dragFrom = i; row.classList.add("dragging"); e.dataTransfer.effectAllowed = "move";
+    });
+    row.addEventListener("dragend", () => row.classList.remove("dragging"));
+    row.addEventListener("dragover", e => { e.preventDefault(); row.classList.add("over"); });
+    row.addEventListener("dragleave", () => row.classList.remove("over"));
+    row.addEventListener("drop", e => {
+      e.preventDefault(); row.classList.remove("over"); moveWaypoint(dragFrom, i);
+    });
+    list.appendChild(row);
+
+    const next = spec.waypoints[i + 1];
+    if (!next) return;
+    const seg = segmentBetween(w.id, next.id);
+    const div = document.createElement("div");
+    div.className = "seg";
+    div.innerHTML = `<span>↓ tramo</span>`;
+    const kind = document.createElement("select");
+    kind.innerHTML = `<option value="line">línea</option><option value="arc">arco</option>`;
+    kind.value = seg.type;
+    kind.onchange = () => { seg.type = kind.value; if (seg.type === "arc" && !seg.bulge_mm) seg.bulge_mm = 100; refresh(); };
+    div.appendChild(kind);
+    if (seg.type === "arc") {
+      const bulge = document.createElement("input");
+      bulge.type = "range"; bulge.min = -400; bulge.max = 400; bulge.step = 10; bulge.value = seg.bulge_mm;
+      bulge.oninput = () => { seg.bulge_mm = +bulge.value; refresh(); };
+      const n = document.createElement("input");
+      n.type = "number"; n.min = 1; n.max = 20; n.value = seg.samples;
+      n.title = "puntos intermedios";
+      n.onchange = () => { seg.samples = Math.max(1, +n.value); refresh(); };
+      const lbl = document.createElement("span");
+      lbl.textContent = `${seg.bulge_mm} mm`;
+      div.append(bulge, lbl, n);
+    }
+    list.appendChild(div);
+  });
+}
+
+// El objetivo se deriva: cabeza de la persona, menos el pedestal, más el ajuste de mira
+function retarget() {
+  spec.target[2] = +(HEAD_FRAC * spec.subject_height - spec.robot.mount_z + spec.aim_z_offset).toFixed(1);
+}
+const axisOf = k => ui.selected === null ? 0 : spec.waypoints[ui.selected].offset[k];
+function setAxis(k, v) {
+  if (ui.selected === null) return;
+  spec.waypoints[ui.selected].offset[k] = v;
+  const o = new THREE.Vector3(...spec.waypoints[ui.selected].offset);
+  ui.dist = o.length();
+  ui.az = Math.atan2(o.y, o.x) * 180 / Math.PI;
+  ui.el = Math.asin(THREE.MathUtils.clamp(o.z / (o.length() || 1), -1, 1)) * 180 / Math.PI;
+  syncInputs();
+}
+function markWaypoint() {
+  spec.waypoints.push({ id: nextId++, offset: offsetFrom(ui.dist, ui.az, ui.el).toArray().map(v => +v.toFixed(1)) });
+  ui.selected = spec.waypoints.length - 1;
+  refresh();
+  msg(`punto ${spec.waypoints.length} marcado`, "ok");
+}
+// Los tramos se guardan por pareja de identificadores: al reordenar o borrar, los que ya no son
+// vecinos dejan de tener sentido y se descartan.
+function pruneSegments() {
+  const pairs = new Set(spec.waypoints.slice(0, -1)
+    .map((w, i) => `${w.id}>${spec.waypoints[i + 1].id}`));
+  spec.segments = spec.segments.filter(s => pairs.has(`${s.from}>${s.to}`));
+}
+function moveWaypoint(from, to) {
+  if (from === null || from === to) return;
+  const [moved] = spec.waypoints.splice(from, 1);
+  spec.waypoints.splice(to, 0, moved);
+  ui.selected = to;
+  dragFrom = null;
+  refresh();
+  msg(`punto movido a la posición ${to + 1}`, "ok");
+}
+function removeWaypoint(i) {
+  const [gone] = spec.waypoints.splice(i, 1);
+  spec.segments = spec.segments.filter(s => s.from !== gone.id && s.to !== gone.id);
+  ui.selected = null;
+  refresh();
+}
+function selectWaypoint(i) {
+  ui.selected = i;
+  const o = new THREE.Vector3(...spec.waypoints[i].offset);
+  ui.dist = o.length();
+  ui.az = Math.atan2(o.y, o.x) * 180 / Math.PI;
+  ui.el = Math.asin(THREE.MathUtils.clamp(o.z / (o.length() || 1), -1, 1)) * 180 / Math.PI;
+  syncInputs();
+  refresh();
+}
+
+// ── Controles ─────────────────────────────────────────────────────────────────
+const sliders = {   // [aplicar, leer, unidad]
+  dist: [v => ui.dist = v, () => ui.dist, "mm"],
+  az:   [v => ui.az = v,   () => ui.az,   "°"],
+  el:   [v => ui.el = v,   () => ui.el,   "°"],
+  fov:  [v => spec.camera.fov_h_deg = v, () => spec.camera.fov_h_deg, "°"],
+  tx:   [v => spec.target[0] = v, () => spec.target[0], "mm"],
+  ty:   [v => spec.target[1] = v, () => spec.target[1], "mm"],
+  sh:   [v => { spec.subject_height = v; retarget(); }, () => spec.subject_height, "mm"],
+  mount:[v => { spec.robot.mount_z = v; retarget(); }, () => spec.robot.mount_z, "mm"],
+  aimz: [v => { spec.aim_z_offset = v; retarget(); }, () => spec.aim_z_offset, "mm"],
+  wx:   [v => setAxis(0, v), () => axisOf(0), "mm"],
+  wy:   [v => setAxis(1, v), () => axisOf(1), "mm"],
+  wz:   [v => setAxis(2, v), () => axisOf(2), "mm"],
+  speed:[v => spec.motion.speed = v, () => spec.motion.speed, "%"],
+  blend:[v => spec.motion.blend_mm = v, () => spec.motion.blend_mm, "mm"],
+  coff: [v => spec.camera.offset_mm = v, () => spec.camera.offset_mm, "mm"],
+  dur:  [v => ui.dur = v, () => ui.dur, "s"],
+};
+
+// Cada deslizador lleva al lado una casilla: se puede escribir el valor y dar Enter.
+// Escribir fuera de rango amplía el deslizador en vez de recortar el valor.
+const boxes = {};
+for (const [id, [set, , unit]] of Object.entries(sliders)) {
+  const range = $(id);
+  const box = document.createElement("input");
+  box.type = "number"; box.className = "val"; box.id = id + "V";
+  box.min = range.min; box.max = range.max; box.step = range.step;
+  const label = document.createElement("i"); label.className = "u"; label.textContent = unit;
+  $(id + "V").replaceWith(box, label);
+  boxes[id] = box;
+
+  const apply = (value, typed) => {
+    let v = Number(value);
+    if (!isFinite(v)) { box.value = range.value; return; }
+    if (typed) {
+      if (v > +range.max) range.max = box.max = v;
+      if (v < +range.min) range.min = box.min = v;
+    }
+    v = Math.min(+range.max, Math.max(+range.min, v));
+    range.value = v; box.value = +v.toFixed(1);
+    set(v); refresh();
+  };
+  range.addEventListener("input", e => apply(+e.target.value, false));
+  box.addEventListener("change", () => apply(box.value, true));
+  box.addEventListener("keydown", e => {
+    if (e.key === "Enter") { apply(box.value, true); box.blur(); }
+  });
+}
+boxes.blend.title = "-1 = parar en cada punto, sin blending";
+function syncInputs() {
+  for (const [id, [, get]] of Object.entries(sliders)) {
+    const v = Number(get());
+    if (v > +$(id).max) { $(id).max = boxes[id].max = v; }
+    if (v < +$(id).min) { $(id).min = boxes[id].min = v; }
+    $(id).value = v; boxes[id].value = +v.toFixed(1);
+  }
+}
+$("seed").addEventListener("change", e => {
+  const nums = e.target.value.trim().split(/[\s,]+/).filter(Boolean).map(Number);
+  spec.seed_joints = nums.length === 6 && nums.every(n => !isNaN(n)) ? nums : null;
+  msg(spec.seed_joints ? "semilla lista" : "la semilla necesita 6 números", spec.seed_joints ? "ok" : "err");
+});
+
+function drag(el, onMove) {
+  let last = null;
+  el.addEventListener("pointerdown", e => { last = e; el.setPointerCapture(e.pointerId); });
+  el.addEventListener("pointerup", () => last = null);
+  el.addEventListener("pointermove", e => {
+    if (!last) return;
+    onMove(e.clientX - last.clientX, e.clientY - last.clientY);
+    last = e;
+  });
+}
+drag($("lens"), (dx, dy) => {
+  ui.az = ((ui.az - dx * 0.4 + 180) % 360 + 360) % 360 - 180;
+  ui.el = THREE.MathUtils.clamp(ui.el + dy * 0.3, -85, 85);
+  syncInputs();
+});
+$("lens").addEventListener("wheel", e => {
+  e.preventDefault();
+  ui.dist = THREE.MathUtils.clamp(ui.dist * (1 + Math.sign(e.deltaY) * 0.06), 150, 1500);
+  syncInputs();
+}, { passive: false });
+drag(view3d, (dx, dy) => {
+  orbit.az -= dx * 0.4;
+  orbit.el = THREE.MathUtils.clamp(orbit.el + dy * 0.3, -85, 85);
+});
+view3d.addEventListener("wheel", e => {
+  e.preventDefault();
+  orbit.dist = THREE.MathUtils.clamp(orbit.dist * (1 + Math.sign(e.deltaY) * 0.08), 600, 12000);
+}, { passive: false });
+
+addEventListener("keydown", e => {
+  if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+  if (e.key === "g" || e.key === "G") markWaypoint();
+  if (e.key === " ") { e.preventDefault(); togglePlay(); }
+  if ((e.key === "Backspace" || e.key === "Delete") && ui.selected !== null) removeWaypoint(ui.selected);
+});
+$("mark").onclick = markWaypoint;
+$("play").onclick = togglePlay;
+
+function togglePlay() {
+  if (densify().length < 2) { msg("marca al menos 2 puntos", "err"); return; }
+  ui.playing = !ui.playing; ui.t0 = performance.now();
+  $("play").textContent = ui.playing ? "⏸ Parar" : "▶ Reproducir";
+}
+
+// ── Guardar y generar ─────────────────────────────────────────────────────────
+async function post(url, body) {
+  const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" },
+                                 body: JSON.stringify(body) });
+  return [res.ok, await res.json()];
+}
+$("save").onclick = async () => {
+  spec.name = $("name").value.trim();
+  const [ok, data] = await post(`/api/routes/${spec.name}`, spec);
+  msg(ok ? data.mensaje : data.error, ok ? "ok" : "err");
+  if (ok) loadList();
+};
+$("generate").onclick = async () => {
+  spec.name = $("name").value.trim();
+  const [savedOk, saved] = await post(`/api/routes/${spec.name}`, spec);
+  if (!savedOk) { msg(saved.error, "err"); return; }
+  const [ok, data] = await post(`/api/generate/${spec.name}`, spec);
+  msg(ok ? data.mensaje : data.error, ok ? "ok" : "err");
+};
+async function loadList() {
+  const names = await (await fetch("/api/routes")).json();
+  $("load").innerHTML = `<option value="">cargar…</option>` +
+    names.map(n => `<option value="${n}">${n}</option>`).join("");
+}
+$("load").onchange = async e => {
+  if (!e.target.value) return;
+  const data = await (await fetch(`/api/routes/${e.target.value}`)).json();
+  Object.assign(spec, data);
+  spec.robot = spec.robot || { mount_z: 0, reach_mm: 1400 };
+  spec.aim_z_offset = spec.aim_z_offset || 0;
+  // la persona se ajusta al objetivo guardado, contando el pedestal
+  spec.subject_height = Math.round((spec.target[2] + spec.robot.mount_z - spec.aim_z_offset) / HEAD_FRAC);
+  nextId = Math.max(0, ...spec.waypoints.map(w => w.id)) + 1;
+  ui.selected = null;
+  $("name").value = spec.name;
+  $("seed").value = (spec.seed_joints || []).join(" ");
+  syncInputs(); refresh();
+  msg(`cargada ${spec.name}`, "ok");
+};
+
+// ── Bucle de render ───────────────────────────────────────────────────────────
+const setAids = visible => [shotHelper, pathLine, marks, targetDot, axes]
+  .forEach(o => o.visible = visible);
+
+function resize() {
+  const w = view3d.clientWidth, h = view3d.clientHeight;
+  rView.setSize(w, h); rView.setPixelRatio(devicePixelRatio);
+  viewCam.aspect = w / h; viewCam.updateProjectionMatrix();
+  rLens.setSize(276, 490); rLens.setPixelRatio(devicePixelRatio);
+}
+addEventListener("resize", resize);
+
+function tick() {
+  requestAnimationFrame(tick);
+  if (ui.playing) {
+    const path = densify();
+    const total = (performance.now() - ui.t0) / 1000 / ui.dur;
+    if (total >= 1) { ui.playing = false; $("play").textContent = "▶ Reproducir"; }
+    else {
+      const f = total * (path.length - 1), i = Math.floor(f);
+      const p = path[i].clone().lerp(path[Math.min(i + 1, path.length - 1)], f - i);
+      ui.dist = p.length();
+      ui.az = Math.atan2(p.y, p.x) * 180 / Math.PI;
+      ui.el = Math.asin(THREE.MathUtils.clamp(p.z / (p.length() || 1), -1, 1)) * 180 / Math.PI;
+    }
+  }
+  placeShotCam();
+  viewCam.position.copy(target()).add(offsetFrom(orbit.dist, orbit.az, orbit.el));
+  viewCam.lookAt(target());
+  // Las ayudas de trabajo (puntos, trayectoria, ejes, objetivo, cono) solo van en la vista 3D:
+  // la vista del lente tiene que mostrar la toma tal cual, sin marcas encima.
+  setAids(true);  rView.render(scene, viewCam);
+  setAids(false); rLens.render(scene, shotCam);
+}
+
+syncInputs(); refresh(); resize(); loadList(); tick();
+msg("mueve la cámara y pulsa G para marcar puntos");
+</script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+{
+  "name": "ruta-fr5",
+  "target": [
+    -655.0,
+    0.0,
+    386.1
+  ],
+  "subject_height": 1113,
+  "camera": {
+    "fov_h_deg": 81,
+    "offset_mm": 65.5
+  },
+  "motion": {
+    "speed": 90,
+    "acc": 50,
+    "blend_mm": 10,
+    "camera_timeout_s": 30
+  },
+  "seed_joints": null,
+  "waypoints": [
+    {
+      "id": 1,
+      "offset": [
+        488.1,
+        505.5,
+        255.8
+      ]
+    },
+    {
+      "id": 2,
+      "offset": [
+        374.1,
+        387.4,
+        196.0
+      ]
+    },
+    {
+      "id": 3,
+      "offset": [
+        267.9,
+        -464.0,
+        195.1
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "from": 1,
+      "to": 2,
+      "type": "line",
+      "bulge_mm": 0,
+      "samples": 6
+    },
+    {
+      "from": 2,
+      "to": 3,
+      "type": "line",
+      "bulge_mm": 0,
+      "samples": 6
+    }
+  ],
+  "robot": {
+    "mount_z": 655,
+    "reach_mm": 922.0
+  },
+  "aim_z_offset": 0
+}
