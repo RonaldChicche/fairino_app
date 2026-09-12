@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<!-- FR10 para Gazebo Sim (Fortress): modelo del fabricante + base fija al mundo + gz_ros2_control.
+     Sustituye a gazebo_ros_control (Gazebo Classic), que no existe para Gazebo Sim. -->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="fairino10_v6_robot">
+  <xacro:arg name="initial_positions_file" default="$(find fairino10_v6_moveit2_config)/config/initial_positions.yaml"/>
+  <xacro:arg name="controllers_file" default="$(find fairino10_v6_gazebo)/config/ros2_controllers.yaml"/>
+  <!-- Nombres del plugin: cambian según la versión de gz_ros2_control publicada para Humble -->
+  <xacro:arg name="gz_system_plugin" default="gz_ros2_control/GazeboSimSystem"/>
+  <xacro:arg name="gz_plugin_filename" default="libgz_ros2_control-system.so"/>
+  <xacro:arg name="gz_plugin_name" default="gz_ros2_control::GazeboSimROS2ControlPlugin"/>
+
+  <xacro:property name="initial_positions_file" value="$(arg initial_positions_file)"/>
+  <xacro:property name="initial" value="${load_yaml(initial_positions_file)['initial_positions']}"/>
+
+  <!-- Base fija: sin esto Gazebo deja caer el brazo libre -->
+  <link name="world"/>
+  <joint name="world_to_base_link" type="fixed">
+    <parent link="world"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <xacro:include filename="$(find fairino_description)/urdf/fairino10_v6.urdf"/>
+
+  <!-- Compensación de gravedad (como hacen los servos del FR10 real). Con gravedad, los límites de
+       esfuerzo del URDF (150 Nm en j1-j3) no sostienen el brazo extendido y j2 cae (ver NOTAS.md). -->
+  <xacro:arg name="gravity_compensation" default="true"/>
+  <xacro:macro name="fr10_no_gravity" params="link">
+    <gazebo reference="${link}">
+      <turnGravityOff>true</turnGravityOff>
+    </gazebo>
+  </xacro:macro>
+  <xacro:if value="$(arg gravity_compensation)">
+    <xacro:fr10_no_gravity link="base_link"/>
+    <xacro:fr10_no_gravity link="shoulder_link"/>
+    <xacro:fr10_no_gravity link="upperarm_link"/>
+    <xacro:fr10_no_gravity link="forearm_link"/>
+    <xacro:fr10_no_gravity link="wrist1_link"/>
+    <xacro:fr10_no_gravity link="wrist2_link"/>
+    <xacro:fr10_no_gravity link="wrist3_link"/>
+  </xacro:if>
+
+  <xacro:macro name="fr10_gz_joint" params="name">
+    <joint name="${name}">
+      <command_interface name="position"/>
+      <state_interface name="position">
+        <param name="initial_value">${initial[name]}</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+  </xacro:macro>
+
+  <ros2_control name="GazeboSimSystem" type="system">
+    <hardware>
+      <plugin>$(arg gz_system_plugin)</plugin>
+    </hardware>
+    <xacro:fr10_gz_joint name="j1"/>
+    <xacro:fr10_gz_joint name="j2"/>
+    <xacro:fr10_gz_joint name="j3"/>
+    <xacro:fr10_gz_joint name="j4"/>
+    <xacro:fr10_gz_joint name="j5"/>
+    <xacro:fr10_gz_joint name="j6"/>
+  </ros2_control>
+
+  <gazebo>
+    <plugin filename="$(arg gz_plugin_filename)" name="$(arg gz_plugin_name)">
+      <parameters>$(arg controllers_file)</parameters>
+    </plugin>
+  </gazebo>
+</robot>

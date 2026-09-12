@@ -1,0 +1,62 @@
+{
+  "name": "ruta-nueva",
+  "target": [
+    -1000,
+    0,
+    1589.5
+  ],
+  "subject_height": 1700,
+  "camera": {
+    "fov_h_deg": 81,
+    "offset_mm": 100
+  },
+  "motion": {
+    "speed": 90,
+    "acc": 50,
+    "blend_mm": 10,
+    "camera_timeout_s": 30
+  },
+  "seed_joints": null,
+  "waypoints": [
+    {
+      "id": 1,
+      "offset": [
+        979.1,
+        1013.9,
+        513
+      ]
+    },
+    {
+      "id": 2,
+      "offset": [
+        571.2,
+        591.5,
+        299.3
+      ]
+    },
+    {
+      "id": 3,
+      "offset": [
+        411.1,
+        -712.1,
+        299.3
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "from": 1,
+      "to": 2,
+      "type": "line",
+      "bulge_mm": 0,
+      "samples": 6
+    },
+    {
+      "from": 2,
+      "to": 3,
+      "type": "line",
+      "bulge_mm": 0,
+      "samples": 6
+    }
+  ]
+}
