@@ -1,0 +1,148 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 850" width="100%" height="100%" style="background-color:#0d1117; font-family:Inter,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;">
+<defs>
+      <linearGradient id="origGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#ff5252" />
+        <stop offset="100%" stop-color="#ff1744" />
+      </linearGradient>
+      <linearGradient id="redGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#00e5ff" />
+        <stop offset="100%" stop-color="#00e676" />
+      </linearGradient>
+      <marker id="arrowRed" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M 0 1 L 10 5 L 0 9 z" fill="#ff5252" />
+      </marker>
+      <marker id="arrowGreen" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M 0 1 L 10 5 L 0 9 z" fill="#00e5ff" />
+      </marker>
+      <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="3" result="blur" />
+        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+      </filter>
+    </defs>
+<g opacity="0.15" stroke="#8b949e" stroke-width="1">
+<line x1="245.0" y1="50" x2="245.0" y2="780" />
+<line x1="315.0" y1="50" x2="315.0" y2="780" />
+<line x1="385.0" y1="50" x2="385.0" y2="780" />
+<line x1="455.0" y1="50" x2="455.0" y2="780" />
+<line x1="525.0" y1="50" x2="525.0" y2="780" />
+<line x1="595.0" y1="50" x2="595.0" y2="780" />
+<line x1="665.0" y1="50" x2="665.0" y2="780" />
+<line x1="735.0" y1="50" x2="735.0" y2="780" />
+<line x1="805.0" y1="50" x2="805.0" y2="780" />
+<line x1="875.0" y1="50" x2="875.0" y2="780" />
+<line x1="60" y1="775.0" x2="1020" y2="775.0" />
+<line x1="60" y1="705.0" x2="1020" y2="705.0" />
+<line x1="60" y1="635.0" x2="1020" y2="635.0" />
+<line x1="60" y1="565.0" x2="1020" y2="565.0" />
+<line x1="60" y1="495.0" x2="1020" y2="495.0" />
+<line x1="60" y1="425.0" x2="1020" y2="425.0" />
+<line x1="60" y1="355.0" x2="1020" y2="355.0" />
+<line x1="60" y1="285.0" x2="1020" y2="285.0" />
+<line x1="60" y1="215.0" x2="1020" y2="215.0" />
+<line x1="60" y1="145.0" x2="1020" y2="145.0" />
+<line x1="60" y1="75.0" x2="1020" y2="75.0" />
+</g>
+<line x1="60" y1="425.0" x2="1020" y2="425.0" stroke="#58a6ff" stroke-width="2" opacity="0.7" />
+<line x1="805.0" y1="50" x2="805.0" y2="780" stroke="#58a6ff" stroke-width="2" opacity="0.7" />
+<g font-size="11" fill="#8b949e" text-anchor="middle">
+<text x="245.0" y="443.0">-1600</text>
+<line x1="245.0" y1="421.0" x2="245.0" y2="429.0" stroke="#58a6ff" stroke-width="2" />
+<text x="385.0" y="443.0">-1200</text>
+<line x1="385.0" y1="421.0" x2="385.0" y2="429.0" stroke="#58a6ff" stroke-width="2" />
+<text x="525.0" y="443.0">-800</text>
+<line x1="525.0" y1="421.0" x2="525.0" y2="429.0" stroke="#58a6ff" stroke-width="2" />
+<text x="665.0" y="443.0">-400</text>
+<line x1="665.0" y1="421.0" x2="665.0" y2="429.0" stroke="#58a6ff" stroke-width="2" />
+<text x="805.0" y="443.0">0</text>
+<line x1="805.0" y1="421.0" x2="805.0" y2="429.0" stroke="#58a6ff" stroke-width="2" />
+<text x="783.0" y="779.0">-1000</text>
+<line x1="801.0" y1="775.0" x2="809.0" y2="775.0" stroke="#58a6ff" stroke-width="2" />
+<text x="783.0" y="639.0">-600</text>
+<line x1="801.0" y1="635.0" x2="809.0" y2="635.0" stroke="#58a6ff" stroke-width="2" />
+<text x="783.0" y="499.0">-200</text>
+<line x1="801.0" y1="495.0" x2="809.0" y2="495.0" stroke="#58a6ff" stroke-width="2" />
+<text x="783.0" y="359.0">+200</text>
+<line x1="801.0" y1="355.0" x2="809.0" y2="355.0" stroke="#58a6ff" stroke-width="2" />
+<text x="783.0" y="219.0">+600</text>
+<line x1="801.0" y1="215.0" x2="809.0" y2="215.0" stroke="#58a6ff" stroke-width="2" />
+<text x="783.0" y="79.0">+1000</text>
+<line x1="801.0" y1="75.0" x2="809.0" y2="75.0" stroke="#58a6ff" stroke-width="2" />
+<text x="1010" y="415.0" font-weight="bold" fill="#58a6ff">X (mm)</text>
+<text x="820.0" y="65" font-weight="bold" fill="#58a6ff">Y (mm)</text>
+</g>
+<circle cx="805.0" cy="425.0" r="490.0" fill="none" stroke="#f0883e" stroke-width="1.5" stroke-dasharray="8 6" opacity="0.4" />
+<text x="335.0" y="410.0" fill="#f0883e" font-size="11" opacity="0.6">Límite de alcance FR10 (R=1400 mm)</text>
+<circle cx="280.0" cy="425.0" r="381.4" fill="none" stroke="#7ee787" stroke-width="1" stroke-dasharray="3 4" opacity="0.3" />
+<g transform="translate(805.0, 425.0)">
+      <circle r="12" fill="#1f6feb" opacity="0.3" />
+      <circle r="6" fill="#58a6ff" />
+      <text x="15" y="-12" fill="#58a6ff" font-size="13" font-weight="bold">Base Robot FR10 (0, 0)</text>
+    </g>
+<g transform="translate(280.0, 425.0)">
+      <circle r="18" fill="none" stroke="#f85149" stroke-width="1.5" stroke-dasharray="4 2" />
+      <circle r="10" fill="none" stroke="#f85149" stroke-width="1.5" />
+      <circle r="4" fill="#f85149" />
+      <line x1="-22" y1="0" x2="22" y2="0" stroke="#f85149" stroke-width="1.5" />
+      <line x1="0" y1="-22" x2="0" y2="22" stroke="#f85149" stroke-width="1.5" />
+      <text x="-15" y="-26" fill="#f85149" font-size="13" font-weight="bold" text-anchor="middle">Objetivo / Sujeto (-1500, 0)</text>
+    </g>
+<path d="M 665.0 75.0 L 549.5 155.5 L 581.4 192.9 L 607.8 232.2 L 629.0 273.5 L 644.7 316.7 L 655.1 362.0 L 660.2 409.1 L 659.8 458.2 L 659.6 499.2 L 654.2 537.8 L 643.6 574.0 L 627.8 607.7 L 606.9 639.1 L 580.8 668.0 L 549.5 694.5" fill="none" stroke="#ff5252" stroke-width="2.5" stroke-dasharray="6 4" opacity="0.65" />
+<circle cx="665.0" cy="75.0" r="5" fill="#ff5252" />
+<text x="675.0" y="79.0" fill="#ff7b72" font-size="10" opacity="0.9">Orig WP2 (+1000 Y)</text>
+<circle cx="549.5" cy="155.5" r="5" fill="#ff5252" />
+<text x="559.5" y="159.5" fill="#ff7b72" font-size="10" opacity="0.9">Orig WP3 (+770 Y)</text>
+<circle cx="659.8" cy="458.2" r="5" fill="#ff5252" />
+<text x="669.8" y="462.2" fill="#ff7b72" font-size="10" opacity="0.9">Orig WP4 (-95 Y)</text>
+<circle cx="549.5" cy="694.5" r="5" fill="#ff5252" />
+<text x="559.5" y="698.5" fill="#ff7b72" font-size="10" opacity="0.9">Orig WP5 (-770 Y)</text>
+<g transform="translate(695.1, 407.6)">
+      <circle r="9" fill="#ff1744" filter="url(#glow)" opacity="0.8" />
+      <circle r="4" fill="#ffffff" />
+      <line x1="12" y1="0" x2="70" y2="-25" stroke="#ff1744" stroke-width="1.5" />
+      <rect x="72" y="-45" width="220" height="38" rx="5" fill="#21262d" stroke="#ff1744" stroke-width="1.5" />
+      <text x="80" y="-28" fill="#ff7b72" font-size="11" font-weight="bold">❌ Singularidad Muñeca J5 ≈ 2.9°</text>
+      <text x="80" y="-13" fill="#8b949e" font-size="10">Error IK 112 / Giro J4 &gt; 200°</text>
+    </g>
+<path d="M 665.0 267.5 L 641.5 303.7 L 648.6 322.6 L 654.2 341.6 L 658.4 360.9 L 661.2 380.3 L 662.6 400.0 L 662.5 419.9 L 661.1 439.9 L 662.5 455.9 L 662.5 471.6 L 661.1 487.1 L 658.3 502.3 L 654.2 517.2 L 648.6 531.9 L 641.5 546.3" fill="none" stroke="url(#redGrad)" stroke-width="4" filter="url(#glow)" opacity="0.9" />
+<circle cx="665.0" cy="267.5" r="6" fill="#00e5ff" stroke="#ffffff" stroke-width="1.5" />
+<text x="677.0" y="262.5" fill="#79c0ff" font-size="11" font-weight="bold">WP2: (+450.0 Y)</text>
+<circle cx="641.5" cy="303.7" r="6" fill="#00e5ff" stroke="#ffffff" stroke-width="1.5" />
+<text x="653.5" y="298.7" fill="#79c0ff" font-size="11" font-weight="bold">WP3 Inicio: (+346.5 Y)</text>
+<circle cx="648.6" cy="322.6" r="3" fill="#00e676" opacity="0.8" />
+<circle cx="654.2" cy="341.6" r="3" fill="#00e676" opacity="0.8" />
+<circle cx="658.4" cy="360.9" r="3" fill="#00e676" opacity="0.8" />
+<circle cx="661.2" cy="380.3" r="3" fill="#00e676" opacity="0.8" />
+<circle cx="662.6" cy="400.0" r="3" fill="#00e676" opacity="0.8" />
+<circle cx="662.5" cy="419.9" r="3" fill="#00e676" opacity="0.8" />
+<circle cx="661.1" cy="439.9" r="6" fill="#00e5ff" stroke="#ffffff" stroke-width="1.5" />
+<text x="673.1" y="434.9" fill="#79c0ff" font-size="11" font-weight="bold">WP4 Vértice: (-42.7 Y)</text>
+<circle cx="662.5" cy="455.9" r="3" fill="#00e676" opacity="0.8" />
+<circle cx="662.5" cy="471.6" r="3" fill="#00e676" opacity="0.8" />
+<circle cx="661.1" cy="487.1" r="3" fill="#00e676" opacity="0.8" />
+<circle cx="658.3" cy="502.3" r="3" fill="#00e676" opacity="0.8" />
+<circle cx="654.2" cy="517.2" r="3" fill="#00e676" opacity="0.8" />
+<circle cx="648.6" cy="531.9" r="3" fill="#00e676" opacity="0.8" />
+<circle cx="641.5" cy="546.3" r="6" fill="#00e5ff" stroke="#ffffff" stroke-width="1.5" />
+<text x="501.5" y="561.3" fill="#79c0ff" font-size="11" font-weight="bold">WP5 Fin: (-346.5 Y)</text>
+<line x1="280.0" y1="425.0" x2="641.5" y2="303.7" stroke="#7ee787" stroke-width="1" stroke-dasharray="4 4" opacity="0.5" />
+<line x1="280.0" y1="425.0" x2="641.5" y2="546.3" stroke="#7ee787" stroke-width="1" stroke-dasharray="4 4" opacity="0.5" />
+<text x="400.0" y="410.0" fill="#7ee787" font-size="12" font-weight="bold">Ángulo: 38°</text>
+<g transform="translate(60, 40)">
+      <rect width="420" height="135" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1.5" opacity="0.95" />
+      <text x="16" y="24" fill="#f0f6fc" font-size="14" font-weight="bold">PLANO CARTESIANO DE TRAYECTORIAS (VISTA SUPERIOR XY)</text>
+      <text x="16" y="42" fill="#8b949e" font-size="11">Base del Robot en (0, 0) · Objetivo fijo en (-1500, 0) mm</text>
+      
+      <!-- Item 1: Original -->
+      <line x1="16" y1="65" x2="50" y2="65" stroke="#ff5252" stroke-width="2.5" stroke-dasharray="5 3" />
+      <circle cx="33" cy="65" r="4" fill="#ff5252" />
+      <text x="60" y="69" fill="#ff7b72" font-size="11">Ruta Original: 90° azimut (+770 a -770 Y) → Inviable (Error 112)</text>
+      
+      <!-- Item 2: Reducida -->
+      <line x1="16" y1="92" x2="50" y2="92" stroke="#00e5ff" stroke-width="3.5" />
+      <circle cx="33" cy="92" r="4" fill="#00e676" />
+      <text x="60" y="96" fill="#7ee787" font-size="11" font-weight="bold">Ruta Reducida: 38° azimut (+346.5 a -346.5 Y) → 100% Continua</text>
+      
+      <!-- Item 3: Métricas -->
+      <text x="16" y="122" fill="#e6edf3" font-size="10.5">Config 0 elegida · Despeje mín: 94.0 mm · Margen: 3.2° · Salto máx: 3.8°</text>
+    </g>
+</svg>
