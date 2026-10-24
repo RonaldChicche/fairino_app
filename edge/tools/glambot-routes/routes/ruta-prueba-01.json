@@ -1,0 +1,89 @@
+{
+  "name": "ruta-prueba-01",
+  "target": [
+    -1500,
+    0,
+    796
+  ],
+  "subject_height": 1600,
+  "aim_z_offset": 0,
+  "robot": {
+    "mount_z": 700,
+    "reach_mm": 1400
+  },
+  "camera": {
+    "fov_h_deg": 55,
+    "offset_mm": 100
+  },
+  "motion": {
+    "speed": 20,
+    "acc": 50,
+    "blend_mm": 10,
+    "camera_timeout_s": 30
+  },
+  "seed_joints": [
+    -84.6097,
+    -7.9286,
+    -94.9921,
+    -248.5,
+    -17.0385,
+    171.792
+  ],
+  "waypoints": [
+    {
+      "id": 2,
+      "offset": [
+        1100.0,
+        450.0,
+        -52.0
+      ]
+    },
+    {
+      "id": 3,
+      "offset": [
+        1033.0,
+        346.5,
+        -38.0
+      ]
+    },
+    {
+      "id": 4,
+      "offset": [
+        1088.8,
+        -42.7,
+        -38.0
+      ]
+    },
+    {
+      "id": 5,
+      "offset": [
+        1033.0,
+        -346.5,
+        -38.0
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "from": 2,
+      "to": 3,
+      "type": "line",
+      "bulge_mm": 0,
+      "samples": 6
+    },
+    {
+      "from": 3,
+      "to": 4,
+      "type": "arc",
+      "bulge_mm": 25,
+      "samples": 6
+    },
+    {
+      "from": 4,
+      "to": 5,
+      "type": "arc",
+      "bulge_mm": 25,
+      "samples": 6
+    }
+  ]
+}
