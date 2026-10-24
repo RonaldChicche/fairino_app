@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Formatos para redes</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="position: relative; width: 1440px; height: 760px; background: #F3F4F6; font-family: 'Public Sans', system-ui, sans-serif; color: #1A1F24; font-size: 14px; line-height: 20px">
+
+<div style="position: absolute; left: 72px; top: 120px; width: 400px; height: 516px; box-sizing: border-box; padding: 24px; display: flex; align-items: flex-start; justify-content: flex-start; text-align: left; background: #F4F7FE; border: 2px solid #2457D6; border-radius: 8px"><span><b style="font-size: 16px">Lo que entregamos</b><br><br><b>Vertical</b><br>9:16, 1215×2160, H.264 con audio AAC, MP4 con arranque rápido.<br><br><b>Amplio</b><br>16:9, 3840×2160, con los mismos códecs. Para YouTube, Facebook en feed y pantallas.<br><br><b>Cuadros por segundo</b><br>30. La cámara lenta queda 4× más lenta. A 24 sería 5×, pero la ayuda de Instagram pide al menos 30.<br><br><b>Tamaño</b><br>Tope de 15 MB. Un video de 12 s a unos 10 Mbps cabe. Si la toma es más larga, baja el bitrate.</span></div>
+
+<div style="position: absolute; left: 520px; top: 120px; width: 420px; height: 250px; box-sizing: border-box; padding: 20px; display: flex; align-items: flex-start; justify-content: flex-start; text-align: left; background: #FFFFFF; border: 1px solid #CBD2D9; border-radius: 8px"><span><b style="font-size: 16px">Instagram Reels</b><br><br>Recomienda 9:16 y acepta desde 1,91:1 hasta 9:16. Mínimo 720 px. La ayuda dice al menos 30 fps.<br><br>Por su API: ancho máximo 1920 px, hasta 25 Mbps, 300 MB y 15 min.<br><br>En el feed principal el Reel se recorta a 4:5, así que el sujeto debe quedar centrado. Vuelve a comprimir lo que subes.</span></div>
+<div style="position: absolute; left: 956px; top: 120px; width: 420px; height: 250px; box-sizing: border-box; padding: 20px; display: flex; align-items: flex-start; justify-content: flex-start; text-align: left; background: #FFFFFF; border: 1px solid #CBD2D9; border-radius: 8px"><span><b style="font-size: 16px">TikTok</b><br><br>MP4, WebM o MOV, con H.264 recomendado. De 23 a 60 fps. De 360 a 4096 px por lado. Hasta 4 GB.<br><br>Esos datos son de su API. TikTok no publica a qué resolución reproduce. Las guías de 2026 recomiendan 1080×1920 a 30 fps como master práctico.</span></div>
+<div style="position: absolute; left: 520px; top: 386px; width: 420px; height: 250px; box-sizing: border-box; padding: 20px; display: flex; align-items: flex-start; justify-content: flex-start; text-align: left; background: #FFFFFF; border: 1px solid #CBD2D9; border-radius: 8px"><span><b style="font-size: 16px">Facebook Reels</b><br><br>No encontré su página oficial. Guías de terceros coinciden en 9:16, 1080×1920, MP4 con H.264 y AAC.<br><br>Una guía dice que desde junio de 2025 todos los videos de Facebook se comparten como Reels. Es una sola fuente.</span></div>
+<div style="position: absolute; left: 956px; top: 386px; width: 420px; height: 250px; box-sizing: border-box; padding: 20px; display: flex; align-items: flex-start; justify-content: flex-start; text-align: left; background: #FFFFFF; border: 1px solid #CBD2D9; border-radius: 8px"><span><b style="font-size: 16px">WhatsApp</b><br><br>Las fuentes se contradicen: unas dicen 16 MB por video y otras hasta 64 MB, con 100 MB en buena conexión. Los estados duran de 30 a 90 s según la fuente. Enviado como documento no se recomprime.<br><br>Apuntamos al 16 MB, el límite más estricto. El botón de WhatsApp comparte el link (D23).</span></div>
+
+<div style="position: absolute; left: 64px; top: 64px; font-size: 22px; line-height: 30px; font-weight: 600">Formatos de las redes y qué entregamos</div>
+<div style="position: absolute; left: 72px; top: 662px; width: 1304px; font-size: 13px; line-height: 18px; color: #5B6671">Revisado en octubre de 2026. Las páginas oficiales de ayuda no se pudieron leer de forma automática, así que esto sale de guías de 2026 y de lo que citan la ayuda de Instagram y la documentación de TikTok. Los números cambian y se contradicen entre fuentes: hay que confirmarlos en cada app antes de fijar el formato.</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":760}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

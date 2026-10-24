@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Cámara</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0}
+a{color:#2457D6}a:hover{color:#1B44AE}
+</style>
+</helmet>
+<div style="display:flex;flex-wrap:wrap;min-height:900px;background:#F3F4F6;font-family:'Public Sans',system-ui,sans-serif;color:#1A1F24;font-size:14px;line-height:1.45">
+
+  <nav style="flex:0 0 208px;box-sizing:border-box;padding:24px 16px;display:flex;flex-direction:column;gap:24px;background:#FFFFFF;border-right:1px solid #E3E6EA">
+    <div style="font-size:16px;font-weight:600;padding:0 12px">Glambot Studio</div>
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <sc-for list="{{nav}}" as="item" hint-placeholder-count="4">
+        <a href="{{item.href}}" style="{{item.style}}">{{item.label}}</a>
+      </sc-for>
+    </div>
+    <div style="margin-top:auto;display:flex;flex-direction:column;gap:8px;padding:0 12px;font-size:13px;color:#5B6671">
+      <div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:#1A7F4B"></div>Robot FR10 conectado</div>
+      <div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:#1A7F4B"></div>GoPro HERO10 por USB</div>
+    </div>
+  </nav>
+
+  <main style="flex:999 1 560px;min-width:0;box-sizing:border-box;padding:28px 32px;display:flex;flex-direction:column;gap:20px">
+    <h1 style="margin:0;font-size:22px;font-weight:600">Cámara</h1>
+
+    <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+
+      <div style="flex:1 1 520px;min-width:0;display:flex;flex-direction:column;gap:20px">
+        <section style="background:#FFFFFF;border:1px solid #E3E6EA;border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:14px">
+          <div style="position:relative;aspect-ratio:16/9;background:#10151A;border-radius:6px;overflow:hidden;color:#FFFFFF">
+            <div style="position:absolute;left:50%;top:22%;width:64px;height:64px;margin-left:-32px;border-radius:50%;background:#3A4650"></div>
+            <div style="position:absolute;left:50%;top:50%;width:140px;height:160px;margin-left:-70px;border-radius:70px 70px 0 0;background:#2B353E"></div>
+            <div style="position:absolute;left:34.2%;width:31.6%;top:0;bottom:0;border-left:1px solid rgba(255,255,255,0.6);border-right:1px solid rgba(255,255,255,0.6);box-shadow:0 0 0 999px rgba(0,0,0,0.5)"></div>
+            <div style="position:absolute;left:12px;top:10px;font-size:12px;opacity:0.8">Vista previa en vivo · 480p</div>
+            <div style="position:absolute;right:12px;top:10px;font-size:12px">{{recStatus}}</div>
+            <div style="position:absolute;left:50%;bottom:10px;transform:translateX(-50%);font-size:12px;opacity:0.8">Recorte 9:16</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:16px">
+            <button onClick="{{toggleRec}}" style="{{recStyle}}">{{recLabel}}</button>
+            <span style="font-variant-numeric:tabular-nums;color:#5B6671">{{recTime}}</span>
+            <label style="margin-left:auto;display:flex;align-items:center;gap:8px;color:#5B6671"><input type="checkbox" checked> Mostrar recorte 9:16</label>
+          </div>
+        </section>
+
+        <section style="background:#FFFFFF;border:1px solid #E3E6EA;border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:14px">
+          <h2 style="margin:0;font-size:15px;font-weight:600">Resultado esperado</h2>
+          <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px">
+            <div><div style="color:#5B6671;font-size:12px">Captura</div><div style="font-size:20px;font-weight:600">4K · 120</div></div>
+            <div><div style="color:#5B6671;font-size:12px">Cámara lenta</div><div style="font-size:20px;font-weight:600">5×</div></div>
+            <div><div style="color:#5B6671;font-size:12px">Recorte vertical</div><div style="font-size:20px;font-weight:600">1215×2160</div></div>
+            <div><div style="color:#5B6671;font-size:12px">Duración</div><div style="font-size:20px;font-weight:600">3 s → 15 s</div></div>
+          </div>
+        </section>
+      </div>
+
+      <div style="flex:0 1 360px;min-width:300px;display:flex;flex-direction:column;gap:20px">
+        <section style="background:#FFFFFF;border:1px solid #E3E6EA;border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:14px">
+          <h2 style="margin:0;font-size:15px;font-weight:600">Ajustes</h2>
+          <div style="display:flex;flex-direction:column;gap:6px;padding:12px;background:#F8F9FB;border:1px solid #E3E6EA;border-radius:6px">
+            <label for="preset" style="font-weight:600">Preset</label>
+            <select id="preset" style="padding:8px 10px;border:1px solid #CBD2D9;border-radius:6px;background:#FFFFFF;font:inherit"><option selected>Glambot · máxima calidad en movimiento</option><option>Personalizado</option></select>
+            <div style="color:#5B6671;font-size:13px">4K a 120 fps, lente Wide, HyperSmooth apagado, bitrate alto y anti-parpadeo 60 Hz. Lo demás se fija una vez en la cámara. El detalle está en la página Entrega de videos.</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><label for="res">Resolución</label>
+            <select id="res" style="padding:8px 10px;border:1px solid #CBD2D9;border-radius:6px;background:#FFFFFF;font:inherit;min-width:150px"><option>5.3K</option><option selected>4K</option><option>2.7K</option><option>1080p</option></select></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><label for="fps">Cuadros por segundo</label>
+            <select id="fps" style="padding:8px 10px;border:1px solid #CBD2D9;border-radius:6px;background:#FFFFFF;font:inherit;min-width:150px"><option>240</option><option selected>120</option><option>60</option><option>30</option><option>24</option></select></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><label for="lens">Lente</label>
+            <select id="lens" style="padding:8px 10px;border:1px solid #CBD2D9;border-radius:6px;background:#FFFFFF;font:inherit;min-width:150px"><option selected>Wide</option><option>Linear</option><option>Narrow</option><option>SuperView</option></select></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><label for="hs">HyperSmooth</label>
+            <select id="hs" style="padding:8px 10px;border:1px solid #CBD2D9;border-radius:6px;background:#FFFFFF;font:inherit;min-width:150px"><option selected>Apagado</option><option>Low</option><option>High</option><option>Boost</option></select></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><label for="br">Bitrate</label>
+            <select id="br" style="padding:8px 10px;border:1px solid #CBD2D9;border-radius:6px;background:#FFFFFF;font:inherit;min-width:150px"><option>Estándar</option><option selected>Alto</option></select></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><label for="af">Anti-parpadeo</label>
+            <select id="af" style="padding:8px 10px;border:1px solid #CBD2D9;border-radius:6px;background:#FFFFFF;font:inherit;min-width:150px"><option selected>60 Hz</option><option>50 Hz</option></select></div>
+          <button style="padding:10px 16px;border:0;border-radius:6px;background:#2457D6;color:#FFFFFF;font:inherit;font-weight:600">Aplicar a la cámara</button>
+        </section>
+
+        <section style="background:#FFFFFF;border:1px solid #E3E6EA;border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:8px">
+          <h2 style="margin:0;font-size:15px;font-weight:600">Se fija en la cámara</h2>
+          <div style="color:#5B6671">Balance de blancos, ISO, shutter, EV, nitidez y color no se pueden cambiar desde la app. La HERO10 tampoco tiene HDR en video.</div>
+        </section>
+      </div>
+
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const rec = !!(this.state && this.state.rec);
+    const items = [
+      ['Cámara', 'Camara.dc.html'],
+      ['Brazo', 'Brazo.dc.html'],
+      ['Ruta', 'Ruta.dc.html'],
+      ['Toma de prueba', 'Toma.dc.html']
+    ];
+    const base = 'display:block;padding:10px 12px;border-radius:6px;text-decoration:none;font-weight:500;color:#1A1F24';
+    const active = 'display:block;padding:10px 12px;border-radius:6px;text-decoration:none;font-weight:600;color:#1B44AE;background:#E8EEFB';
+    return {
+      nav: items.map((it, i) => ({ label: it[0], href: it[1], style: i === 0 ? active : base })),
+      recLabel: rec ? 'Detener' : 'Grabar',
+      recStatus: rec ? '● Grabando' : 'En espera',
+      recTime: rec ? '00:02.4' : '00:00.0',
+      recStyle: 'padding:10px 20px;border:0;border-radius:6px;font:inherit;font-weight:600;color:#FFFFFF;min-width:110px;background:' + (rec ? '#1A1F24' : '#D92D20'),
+      toggleRec: () => this.setState({ rec: !rec })
+    };
+  }
+}
+</script>
+</body>
+</html>

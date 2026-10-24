@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Dónde corre cada servidor</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="position: relative; width: 1440px; height: 840px; background: #F3F4F6; font-family: 'Public Sans', system-ui, sans-serif; color: #1A1F24; font-size: 14px; line-height: 20px">
+
+<div style="position: absolute; left: 64px; top: 120px; width: 880px; height: 500px; box-sizing: border-box; background: #E9EDF1; border: 1px solid #D5DBE1; border-radius: 8px"></div>
+<div style="position: absolute; left: 1000px; top: 120px; width: 376px; height: 500px; box-sizing: border-box; background: #FFF4DF; border: 1px solid #F0DDB8; border-radius: 8px"></div>
+
+<svg width="165" height="8" viewBox="0 0 165 8" preserveAspectRatio="none" style="position: absolute; left: 288px; top: 296px; width: 165px; height: 8px; overflow: visible; fill: none; stroke: #5B6671; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M 0 4 L 165 4"></path></svg>
+<svg width="8" height="35" viewBox="0 0 8 35" preserveAspectRatio="none" style="position: absolute; left: 449px; top: 300px; width: 8px; height: 35px; overflow: visible; fill: none; stroke: #5B6671; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-1" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#5B6671" stroke="none" style="stroke: none; fill: #5B6671; fill: context-stroke"/></marker></defs><path d="M 4 0 L 4 31" marker-end="url(#dc-arrow-head-filled-1)"></path></svg>
+<svg width="165" height="8" viewBox="0 0 165 8" preserveAspectRatio="none" style="position: absolute; left: 288px; top: 534px; width: 165px; height: 8px; overflow: visible; fill: none; stroke: #5B6671; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M 0 4 L 165 4"></path></svg>
+<svg width="8" height="81" viewBox="0 0 8 81" preserveAspectRatio="none" style="position: absolute; left: 449px; top: 457px; width: 8px; height: 81px; overflow: visible; fill: none; stroke: #5B6671; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-2" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#5B6671" stroke="none" style="stroke: none; fill: #5B6671; fill: context-stroke"/></marker></defs><path d="M 4 81 L 4 4" marker-end="url(#dc-arrow-head-filled-2)"></path></svg>
+<svg width="8" height="91" viewBox="0 0 8 91" preserveAspectRatio="none" style="position: absolute; left: 519px; top: 245px; width: 8px; height: 91px; overflow: visible; fill: none; stroke: #5B6671; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-3" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#5B6671" stroke="none" style="stroke: none; fill: #5B6671; fill: context-stroke"/></marker></defs><path d="M 4 91 L 4 4" marker-end="url(#dc-arrow-head-filled-3)"></path></svg>
+<svg width="436" height="8" viewBox="0 0 436 8" preserveAspectRatio="none" style="position: absolute; left: 611px; top: 202px; width: 436px; height: 8px; overflow: visible; fill: none; stroke: #5B6671; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-4" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#5B6671" stroke="none" style="stroke: none; fill: #5B6671; fill: context-stroke"/></marker></defs><path d="M 0 4 L 432 4" marker-end="url(#dc-arrow-head-filled-4)"></path></svg>
+<svg width="208" height="8" viewBox="0 0 208 8" preserveAspectRatio="none" style="position: absolute; left: 592px; top: 392px; width: 208px; height: 8px; overflow: visible; fill: none; stroke: #5B6671; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M 0 4 L 208 4"></path></svg>
+<svg width="8" height="67" viewBox="0 0 8 67" preserveAspectRatio="none" style="position: absolute; left: 796px; top: 329px; width: 8px; height: 67px; overflow: visible; fill: none; stroke: #5B6671; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-5" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#5B6671" stroke="none" style="stroke: none; fill: #5B6671; fill: context-stroke"/></marker></defs><path d="M 4 67 L 4 4" marker-end="url(#dc-arrow-head-filled-5)"></path></svg>
+<svg width="8" height="67" viewBox="0 0 8 67" preserveAspectRatio="none" style="position: absolute; left: 796px; top: 396px; width: 8px; height: 67px; overflow: visible; fill: none; stroke: #5B6671; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-6" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#5B6671" stroke="none" style="stroke: none; fill: #5B6671; fill: context-stroke"/></marker></defs><path d="M 4 0 L 4 63" marker-end="url(#dc-arrow-head-filled-6)"></path></svg>
+<svg width="8" height="91" viewBox="0 0 8 91" preserveAspectRatio="none" style="position: absolute; left: 1184px; top: 244px; width: 8px; height: 91px; overflow: visible; fill: none; stroke: #5B6671; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-7" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#5B6671" stroke="none" style="stroke: none; fill: #5B6671; fill: context-stroke"/></marker></defs><path d="M 4 0 L 4 87" marker-end="url(#dc-arrow-head-filled-7)"></path></svg>
+<svg width="8" height="287" viewBox="0 0 8 287" preserveAspectRatio="none" style="position: absolute; left: 1184px; top: 413px; width: 8px; height: 287px; overflow: visible; fill: none; stroke: #5B6671; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-8" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#5B6671" stroke="none" style="stroke: none; fill: #5B6671; fill: context-stroke"/></marker></defs><path d="M 4 287 L 4 4" marker-end="url(#dc-arrow-head-filled-8)"></path></svg>
+
+<div style="position: absolute; left: 112px; top: 262px; width: 176px; height: 76px; box-sizing: border-box; padding: 8px 10px; display: flex; align-items: center; justify-content: center; text-align: center; background: #FFFFFF; border: 1px solid #CBD2D9; border-radius: 8px"><span><b>GoPro HERO10</b><br>graba en su SD</span></div>
+<div style="position: absolute; left: 112px; top: 500px; width: 176px; height: 76px; box-sizing: border-box; padding: 8px 10px; display: flex; align-items: center; justify-content: center; text-align: center; background: #FFFFFF; border: 1px solid #CBD2D9; border-radius: 8px"><span><b>Robot FR10</b><br>ejecuta la ruta</span></div>
+<div style="position: absolute; left: 384px; top: 336px; width: 208px; height: 120px; box-sizing: border-box; padding: 8px 10px; display: flex; align-items: center; justify-content: center; text-align: center; background: #FFFFFF; border: 2px solid #2457D6; border-radius: 8px"><span><b>Edge</b><br>laptop ahora, mini PC después<br>captura, procesa y manda la cola</span></div>
+<div style="position: absolute; left: 435px; top: 168px; width: 176px; height: 76px; box-sizing: border-box; padding: 8px 10px; display: flex; align-items: center; justify-content: center; text-align: center; background: #FFFFFF; border: 1px solid #CBD2D9; border-radius: 8px"><span><b>Router 4G/5G</b><br>chip propio, solo para subir</span></div>
+<div style="position: absolute; left: 712px; top: 252px; width: 176px; height: 76px; box-sizing: border-box; padding: 8px 10px; display: flex; align-items: center; justify-content: center; text-align: center; background: #FFFFFF; border: 1px solid #CBD2D9; border-radius: 8px"><span><b>Tablet del operador</b><br>interfaz web local</span></div>
+<div style="position: absolute; left: 712px; top: 464px; width: 176px; height: 76px; box-sizing: border-box; padding: 8px 10px; display: flex; align-items: center; justify-content: center; text-align: center; background: #FFFFFF; border: 1px solid #CBD2D9; border-radius: 8px"><span><b>Celular del invitado</b><br>página local de respaldo</span></div>
+<div style="position: absolute; left: 1048px; top: 168px; width: 280px; height: 76px; box-sizing: border-box; padding: 8px 10px; display: flex; align-items: center; justify-content: center; text-align: center; background: #FFFFFF; border: 1px solid #CBD2D9; border-radius: 8px"><span><b>Bucket de videos</b><br>Cloudflare R2, el MP4 final</span></div>
+<div style="position: absolute; left: 1048px; top: 336px; width: 280px; height: 76px; box-sizing: border-box; padding: 8px 10px; display: flex; align-items: center; justify-content: center; text-align: center; background: #FFFFFF; border: 1px solid #CBD2D9; border-radius: 8px"><span><b>Página del link</b><br>glam.datzoncompany.com</span></div>
+<div style="position: absolute; left: 1048px; top: 700px; width: 280px; height: 76px; box-sizing: border-box; padding: 8px 10px; display: flex; align-items: center; justify-content: center; text-align: center; background: #FFFFFF; border: 1px solid #CBD2D9; border-radius: 8px"><span><b>Celular del invitado</b><br>con internet móvil</span></div>
+
+<div style="position: absolute; left: 346px; top: 272px; width: 48px; text-align: center; font-size: 13px; line-height: 16px; color: #5B6671">USB-C</div>
+<div style="position: absolute; left: 338px; top: 510px; width: 64px; text-align: center; font-size: 13px; line-height: 16px; color: #5B6671">Ethernet</div>
+<div style="position: absolute; left: 535px; top: 282px; width: 104px; font-size: 13px; line-height: 16px; color: #5B6671">sube el video</div>
+<div style="position: absolute; left: 773px; top: 178px; width: 112px; text-align: center; font-size: 13px; line-height: 16px; color: #5B6671">Internet móvil</div>
+<div style="position: absolute; left: 640px; top: 368px; width: 112px; text-align: center; font-size: 13px; line-height: 16px; color: #5B6671">WiFi del edge</div>
+<div style="position: absolute; left: 1200px; top: 282px; width: 96px; font-size: 13px; line-height: 16px; color: #5B6671">sirve el MP4</div>
+<div style="position: absolute; left: 1200px; top: 548px; width: 108px; font-size: 13px; line-height: 16px; color: #5B6671">escanea el QR</div>
+
+<div style="position: absolute; left: 64px; top: 64px; font-size: 22px; line-height: 30px; font-weight: 600">Dónde corre cada servidor</div>
+<div style="position: absolute; left: 80px; top: 130px; width: 520px; font-size: 14px; line-height: 18px"><b>Zona del evento</b> · funciona sin internet</div>
+<div style="position: absolute; left: 1016px; top: 130px; width: 340px; font-size: 14px; line-height: 18px"><b>Nube</b> · necesita internet</div>
+<div style="position: absolute; left: 64px; top: 644px; width: 880px; font-size: 14px; line-height: 20px; color: #5B6671">Todo lo que está dentro de la zona del evento sigue funcionando con el cable de red desconectado. La nube recibe los videos después, por la cola de subida.</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":840}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

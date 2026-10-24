@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Preset de cámara</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="position: relative; width: 1440px; height: 700px; background: #F3F4F6; font-family: 'Public Sans', system-ui, sans-serif; color: #1A1F24; font-size: 14px; line-height: 20px">
+
+<div style="position: absolute; left: 72px; top: 120px; width: 628px; height: 500px; box-sizing: border-box; padding: 24px; display: flex; align-items: flex-start; justify-content: flex-start; text-align: left; background: #FFFFFF; border: 2px solid #2457D6; border-radius: 8px"><span><b style="font-size: 16px">La app lo fija desde la API de la cámara</b><br><br><b>Resolución y fps</b>: 4K a 120 fps (D19).<br><br><b>Lente</b>: Wide (D19), con margen para recortar a 9:16.<br><br><b>HyperSmooth</b>: apagado (D7). El brazo ya se mueve suave y la estabilización recorta y deforma sin vuelta atrás.<br><br><b>Bitrate</b>: alto (D7).<br><br><b>Anti-parpadeo</b>: 60 Hz, la red eléctrica de Perú. A 120 fps las luces LED parpadean si esto está mal.<br><br><b>Nivelación de horizonte</b>: apagada, porque recorta la imagen.<br><br><b>Modo de rendimiento</b>: máximo rendimiento.<br><br><b>Apagado automático</b>: nunca.</span></div>
+
+<div style="position: absolute; left: 744px; top: 120px; width: 628px; height: 500px; box-sizing: border-box; padding: 24px; display: flex; align-items: flex-start; justify-content: flex-start; text-align: left; background: #FFFFFF; border: 1px solid #CBD2D9; border-radius: 8px"><span><b style="font-size: 16px">Se fija una vez en la cámara, sin API</b><br><span style="color: #5B6671">La API pública de la HERO10 no los expone. Se guardan en un preset de la cámara.</span><br><br><b>Nitidez</b>: baja (D7).<br><br><b>Balance de blancos</b>: fijo (D7), ajustado a la luz del evento.<br><br><b>ISO máximo</b>: acotado (D7). Con buena luz no hace falta subirlo.<br><br><b>Shutter</b>: rápido, para que el movimiento no salga borroso. Falta medir cuál.<br><br><b>Perfil de color</b>: Flat o Natural. Pendiente en Notion, bloque D.</span></div>
+
+<div style="position: absolute; left: 64px; top: 64px; font-size: 22px; line-height: 30px; font-weight: 600">Preset de cámara: máxima calidad en movimiento</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":700}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

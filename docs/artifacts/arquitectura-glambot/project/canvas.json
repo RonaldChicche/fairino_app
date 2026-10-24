@@ -1,0 +1,281 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-10-11T12:00:00Z"
+  },
+  "title": "Arquitectura Glambot FR10",
+  "launch": {
+    "view": "canvas"
+  },
+  "pages": [
+    {
+      "id": "page-1",
+      "name": "Arquitectura"
+    },
+    {
+      "id": "page-entrega",
+      "name": "Entrega de videos"
+    },
+    {
+      "id": "page-app",
+      "name": "Pantallas de la app"
+    },
+    {
+      "id": "page-datos",
+      "name": "Datos"
+    },
+    {
+      "id": "page-patrones",
+      "name": "Patrones y resiliencia"
+    }
+  ],
+  "boards": {
+    "Main.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 2328,
+      "title": "Arquitectura general"
+    },
+    "Recorrido.dc.html": {
+      "h": 940,
+      "page": "page-entrega",
+      "title": "Recorrido de una toma",
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "Servidores.dc.html": {
+      "h": 840,
+      "page": "page-entrega",
+      "title": "Dónde corre cada servidor",
+      "w": 1440,
+      "x": 1520,
+      "y": 0
+    },
+    "Edicion.dc.html": {
+      "h": 740,
+      "page": "page-entrega",
+      "title": "Edición de cada toma",
+      "w": 1440,
+      "x": 0,
+      "y": 1060
+    },
+    "Almacenamiento.dc.html": {
+      "h": 880,
+      "page": "page-entrega",
+      "title": "Dónde guardar los videos",
+      "w": 1440,
+      "x": 1520,
+      "y": 1060
+    },
+    "Preset.dc.html": {
+      "h": 700,
+      "page": "page-entrega",
+      "title": "Preset de cámara",
+      "w": 1440,
+      "x": 0,
+      "y": 2060
+    },
+    "Redes.dc.html": {
+      "h": 760,
+      "page": "page-entrega",
+      "title": "Formatos para redes",
+      "w": 1440,
+      "x": 1520,
+      "y": 2060
+    },
+    "Camara.dc.html": {
+      "expand": "fill",
+      "h": 900,
+      "is_interactive": true,
+      "page": "page-app",
+      "title": "Cámara",
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "Brazo.dc.html": {
+      "expand": "fill",
+      "h": 900,
+      "is_interactive": true,
+      "page": "page-app",
+      "title": "Brazo",
+      "w": 1440,
+      "x": 1520,
+      "y": 0
+    },
+    "Ruta.dc.html": {
+      "expand": "fill",
+      "h": 900,
+      "is_interactive": true,
+      "page": "page-app",
+      "title": "Ruta",
+      "w": 1440,
+      "x": 0,
+      "y": 1020
+    },
+    "Toma.dc.html": {
+      "expand": "fill",
+      "h": 900,
+      "is_interactive": true,
+      "page": "page-app",
+      "title": "Toma de prueba",
+      "w": 1440,
+      "x": 1520,
+      "y": 1020
+    },
+    "Datos_Modelo.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 1246,
+      "title": "Modelo de datos",
+      "page": "page-datos"
+    },
+    "Datos_Glosario.dc.html": {
+      "x": 1520,
+      "y": 0,
+      "w": 1440,
+      "h": 1276,
+      "title": "Glosario de datos",
+      "page": "page-datos"
+    },
+    "Datos_Columnas1.dc.html": {
+      "x": 0,
+      "y": 1396,
+      "w": 1440,
+      "h": 1306,
+      "title": "Columnas: eventos e invitados",
+      "page": "page-datos"
+    },
+    "Datos_Columnas2.dc.html": {
+      "x": 1520,
+      "y": 1396,
+      "w": 1440,
+      "h": 1268,
+      "title": "Columnas: la sesión",
+      "page": "page-datos"
+    },
+    "Datos_Columnas3.dc.html": {
+      "x": 0,
+      "y": 2822,
+      "w": 1440,
+      "h": 1714,
+      "title": "Columnas: rutas, plantillas y música",
+      "page": "page-datos"
+    },
+    "Datos_Columnas4.dc.html": {
+      "x": 1520,
+      "y": 2822,
+      "w": 1440,
+      "h": 1306,
+      "title": "Columnas: equipos, correos y telemetría",
+      "page": "page-datos"
+    },
+    "Datos_Uso.dc.html": {
+      "x": 0,
+      "y": 4656,
+      "w": 1440,
+      "h": 942,
+      "title": "Cómo se usa",
+      "page": "page-datos"
+    },
+    "Datos_Limpieza.dc.html": {
+      "x": 1520,
+      "y": 4656,
+      "w": 1440,
+      "h": 694,
+      "title": "Limpieza diaria",
+      "page": "page-datos"
+    },
+    "Datos_Acceso.dc.html": {
+      "x": 0,
+      "y": 5718,
+      "w": 1440,
+      "h": 900,
+      "title": "Quién accede a qué",
+      "page": "page-datos"
+    },
+    "Patrones_Estilo.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 1268,
+      "title": "Estilo y patrones",
+      "page": "page-patrones"
+    },
+    "Patrones_Resiliencia.dc.html": {
+      "x": 1520,
+      "y": 0,
+      "w": 1440,
+      "h": 1080,
+      "title": "Resiliencia",
+      "page": "page-patrones"
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Recorrido.dc.html",
+    "Servidores.dc.html",
+    "Edicion.dc.html",
+    "Almacenamiento.dc.html",
+    "Preset.dc.html",
+    "Redes.dc.html",
+    "Camara.dc.html",
+    "Brazo.dc.html",
+    "Ruta.dc.html",
+    "Toma.dc.html",
+    "Datos_Modelo.dc.html",
+    "Datos_Glosario.dc.html",
+    "Datos_Columnas1.dc.html",
+    "Datos_Columnas2.dc.html",
+    "Datos_Columnas3.dc.html",
+    "Datos_Columnas4.dc.html",
+    "Datos_Uso.dc.html",
+    "Datos_Limpieza.dc.html",
+    "Datos_Acceso.dc.html",
+    "Patrones_Estilo.dc.html",
+    "Patrones_Resiliencia.dc.html"
+  ],
+  "notes": {
+    "titulo-entrega": {
+      "kind": "title1",
+      "maxW": 2960,
+      "page": "page-entrega",
+      "text": "Entrega de videos",
+      "w": 240,
+      "x": 0,
+      "y": -280
+    },
+    "titulo-app": {
+      "kind": "title1",
+      "maxW": 2960,
+      "page": "page-app",
+      "text": "Pantallas de la app · datos de ejemplo",
+      "w": 240,
+      "x": 0,
+      "y": -280
+    },
+    "titulo-datos": {
+      "kind": "title1",
+      "maxW": 2960,
+      "page": "page-datos",
+      "text": "Datos · Supabase",
+      "w": 240,
+      "x": 0,
+      "y": -280
+    },
+    "titulo-patrones": {
+      "kind": "title1",
+      "maxW": 2960,
+      "page": "page-patrones",
+      "text": "Patrones y resiliencia",
+      "w": 240,
+      "x": 0,
+      "y": -280
+    }
+  },
+  "designSystems": []
+}

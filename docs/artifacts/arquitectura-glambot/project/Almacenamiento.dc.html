@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Dónde guardar los videos</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="position: relative; width: 1440px; height: 880px; background: #F3F4F6; font-family: 'Public Sans', system-ui, sans-serif; color: #1A1F24; font-size: 14px; line-height: 20px">
+
+<svg width="8" height="40" viewBox="0 0 8 40" preserveAspectRatio="none" style="position: absolute; left: 716px; top: 206px; width: 8px; height: 40px; overflow: visible; fill: none; stroke: #5B6671; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M 4 0 L 4 40"></path></svg>
+<svg width="1008" height="8" viewBox="0 0 1008 8" preserveAspectRatio="none" style="position: absolute; left: 216px; top: 242px; width: 1008px; height: 8px; overflow: visible; fill: none; stroke: #5B6671; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M 0 4 L 1008 4"></path></svg>
+<svg width="8" height="39" viewBox="0 0 8 39" preserveAspectRatio="none" style="position: absolute; left: 212px; top: 246px; width: 8px; height: 39px; overflow: visible; fill: none; stroke: #5B6671; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-1" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#5B6671" stroke="none" style="stroke: none; fill: #5B6671; fill: context-stroke"/></marker></defs><path d="M 4 0 L 4 35" marker-end="url(#dc-arrow-head-filled-1)"></path></svg>
+<svg width="8" height="39" viewBox="0 0 8 39" preserveAspectRatio="none" style="position: absolute; left: 548px; top: 246px; width: 8px; height: 39px; overflow: visible; fill: none; stroke: #5B6671; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-2" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#5B6671" stroke="none" style="stroke: none; fill: #5B6671; fill: context-stroke"/></marker></defs><path d="M 4 0 L 4 35" marker-end="url(#dc-arrow-head-filled-2)"></path></svg>
+<svg width="8" height="39" viewBox="0 0 8 39" preserveAspectRatio="none" style="position: absolute; left: 884px; top: 246px; width: 8px; height: 39px; overflow: visible; fill: none; stroke: #5B6671; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-3" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#5B6671" stroke="none" style="stroke: none; fill: #5B6671; fill: context-stroke"/></marker></defs><path d="M 4 0 L 4 35" marker-end="url(#dc-arrow-head-filled-3)"></path></svg>
+<svg width="8" height="39" viewBox="0 0 8 39" preserveAspectRatio="none" style="position: absolute; left: 1220px; top: 246px; width: 8px; height: 39px; overflow: visible; fill: none; stroke: #5B6671; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-4" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#5B6671" stroke="none" style="stroke: none; fill: #5B6671; fill: context-stroke"/></marker></defs><path d="M 4 0 L 4 35" marker-end="url(#dc-arrow-head-filled-4)"></path></svg>
+
+<div style="position: absolute; left: 520px; top: 130px; width: 400px; height: 76px; box-sizing: border-box; padding: 8px 10px; display: flex; align-items: center; justify-content: center; text-align: center; background: #FFFFFF; border: 1px solid #CBD2D9; border-radius: 8px"><span><b>El video final y su página del link</b><br>unos 20 MB por toma, durante 90 días</span></div>
+
+<div style="position: absolute; left: 72px; top: 286px; width: 288px; height: 264px; box-sizing: border-box; padding: 16px; display: flex; align-items: flex-start; justify-content: flex-start; text-align: left; font-size: 13px; line-height: 18px; background: #F4F7FE; border: 2px solid #2457D6; border-radius: 8px"><span><b>Cloudflare R2</b><br>Bucket compatible con S3, con dominio propio.<br><br><b>Descargas</b><br>No cobra por los datos que salen.<br><br><b>Encaje</b><br>Sirve a la web Next.js (D13) o a páginas estáticas. El dominio debe estar en Cloudflare DNS.</span></div>
+<div style="position: absolute; left: 408px; top: 286px; width: 288px; height: 264px; box-sizing: border-box; padding: 16px; display: flex; align-items: flex-start; justify-content: flex-start; text-align: left; font-size: 13px; line-height: 18px; background: #FFFFFF; border: 1px solid #CBD2D9; border-radius: 8px"><span><b>Supabase Storage</b><br>Bucket dentro de Supabase, junto a Postgres.<br><br><b>Descargas</b><br>Cuenta contra la cuota del plan.<br><br><b>Encaje</b><br>Una sola cuenta para archivos y base de datos.</span></div>
+<div style="position: absolute; left: 744px; top: 286px; width: 288px; height: 264px; box-sizing: border-box; padding: 16px; display: flex; align-items: flex-start; justify-content: flex-start; text-align: left; font-size: 13px; line-height: 18px; background: #FFFFFF; border: 1px solid #CBD2D9; border-radius: 8px"><span><b>Vercel Blob</b><br>Almacén de Vercel, ligado al despliegue de D13.<br><br><b>Descargas</b><br>Se cobra la transferencia.<br><br><b>Encaje</b><br>Casi sin configuración con Next.js.</span></div>
+<div style="position: absolute; left: 1080px; top: 286px; width: 288px; height: 264px; box-sizing: border-box; padding: 16px; display: flex; align-items: flex-start; justify-content: flex-start; text-align: left; font-size: 13px; line-height: 18px; background: #FFFFFF; border: 1px solid #CBD2D9; border-radius: 8px"><span><b>AWS S3 con CloudFront</b><br>El estándar de la industria.<br><br><b>Descargas</b><br>Se cobra la salida, con una cuota mensual gratis.<br><br><b>Encaje</b><br>Funciona, pero hay más piezas que configurar.</span></div>
+
+<div style="position: absolute; left: 72px; top: 262px; width: 90px; font-size: 12px; line-height: 16px; font-weight: 600; color: #2457D6">Elegido</div>
+
+<div style="position: absolute; left: 64px; top: 64px; font-size: 22px; line-height: 30px; font-weight: 600">Dónde guardar los videos para el link</div>
+<div style="position: absolute; left: 64px; top: 566px; width: 1312px; font-size: 14px; line-height: 20px; color: #5B6671">Con unas 200 tomas de 20 MB por evento son unos 4 GB guardados y unos 8 GB descargados si cada invitado baja su video dos veces. Son supuestos míos, porque Notion deja abierta la cantidad de tomas por hora. A ese tamaño decide la simplicidad y no el precio. Los precios cambian: hay que verificarlos antes de elegir.</div>
+<div style="position: absolute; left: 64px; top: 630px; font-size: 16px; line-height: 24px; font-weight: 600">Por decidir <span style="font-weight: 400; font-size: 13px; color: #5B6671">· cada una se registra en Notion con un ID nuevo antes de tocar el repositorio</span></div>
+
+<div style="position: absolute; left: 64px; top: 662px; width: 240px; height: 128px; box-sizing: border-box; padding: 14px; display: flex; align-items: flex-start; justify-content: flex-start; text-align: left; font-size: 13px; line-height: 18px; background: #FFFFFF; border: 1px solid #CBD2D9; border-radius: 8px"><span><b>Dónde se guardan los videos</b><br>Decidido: Cloudflare R2, en la cuenta institucional. Falta registrarlo en Notion.</span></div>
+<div style="position: absolute; left: 332px; top: 662px; width: 240px; height: 128px; box-sizing: border-box; padding: 14px; display: flex; align-items: flex-start; justify-content: flex-start; text-align: left; font-size: 13px; line-height: 18px; background: #FFFFFF; border: 1px solid #CBD2D9; border-radius: 8px"><span><b>Página estática o web Next.js</b><br>Empezar con una página estática por video. El ID no cambia al pasar a D13.</span></div>
+<div style="position: absolute; left: 600px; top: 662px; width: 240px; height: 128px; box-sizing: border-box; padding: 14px; display: flex; align-items: flex-start; justify-content: flex-start; text-align: left; font-size: 13px; line-height: 18px; background: #FFFFFF; border: 1px solid #CBD2D9; border-radius: 8px"><span><b>Carpeta local de cada toma</b><br>capturas/fecha/id-de-toma/, con original/, final/ y toma.json.</span></div>
+<div style="position: absolute; left: 868px; top: 662px; width: 240px; height: 128px; box-sizing: border-box; padding: 14px; display: flex; align-items: flex-start; justify-content: flex-start; text-align: left; font-size: 13px; line-height: 18px; background: #FFFFFF; border: 1px solid #CBD2D9; border-radius: 8px"><span><b>Cuánto se guarda el original</b><br>Hasta cerrar el evento. La SD de la cámara sirve de respaldo.</span></div>
+<div style="position: absolute; left: 1136px; top: 662px; width: 240px; height: 128px; box-sizing: border-box; padding: 14px; display: flex; align-items: flex-start; justify-content: flex-start; text-align: left; font-size: 13px; line-height: 18px; background: #FFFFFF; border: 1px solid #CBD2D9; border-radius: 8px"><span><b>Codificador por hardware</b><br>Probar ffmpeg con el codificador del mini PC N100. No lo he medido.</span></div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":880}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

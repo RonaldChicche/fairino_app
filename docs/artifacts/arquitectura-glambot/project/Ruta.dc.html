@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Ruta</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0}
+a{color:#2457D6}a:hover{color:#1B44AE}
+</style>
+</helmet>
+<div style="display:flex;flex-wrap:wrap;min-height:900px;background:#F3F4F6;font-family:'Public Sans',system-ui,sans-serif;color:#1A1F24;font-size:14px;line-height:1.45">
+
+  <nav style="flex:0 0 208px;box-sizing:border-box;padding:24px 16px;display:flex;flex-direction:column;gap:24px;background:#FFFFFF;border-right:1px solid #E3E6EA">
+    <div style="font-size:16px;font-weight:600;padding:0 12px">Glambot Studio</div>
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <sc-for list="{{nav}}" as="item" hint-placeholder-count="4">
+        <a href="{{item.href}}" style="{{item.style}}">{{item.label}}</a>
+      </sc-for>
+    </div>
+    <div style="margin-top:auto;display:flex;flex-direction:column;gap:8px;padding:0 12px;font-size:13px;color:#5B6671">
+      <div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:#1A7F4B"></div>Robot FR10 conectado</div>
+      <div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:#1A7F4B"></div>GoPro HERO10 por USB</div>
+    </div>
+  </nav>
+
+  <main style="flex:999 1 560px;min-width:0;box-sizing:border-box;padding:28px 32px;display:flex;flex-direction:column;gap:20px">
+    <h1 style="margin:0;font-size:22px;font-weight:600">Ruta</h1>
+
+    <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+
+      <section style="flex:1 1 520px;min-width:0;background:#FFFFFF;border:1px solid #E3E6EA;border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;align-items:center;gap:16px">
+          <h2 style="margin:0;font-size:15px;font-weight:600">Vista superior</h2>
+          <span style="color:#5B6671;font-size:13px">Arrastra el objetivo para cambiar adónde mira la cámara</span>
+        </div>
+        <div style="overflow-x:auto">
+          <div style="position:relative;width:640px;height:360px;margin-inline:auto;background-color:#F8F9FB;background-image:linear-gradient(#E3E6EA 1px,transparent 1px),linear-gradient(90deg,#E3E6EA 1px,transparent 1px);background-size:40px 40px;border-radius:6px">
+
+            <div style="position:absolute;left:48px;top:168px;width:24px;height:24px;border-radius:4px;background:#5B6671"></div>
+            <div style="position:absolute;left:36px;top:198px;font-size:12px;color:#5B6671">Base</div>
+
+            <div style="position:absolute;left:373.6px;top:65.1px;width:150px;height:0;border-top:1px dashed #9AA6FF;transform-origin:0 0;transform:rotate(50deg)"></div>
+            <div style="position:absolute;left:340.1px;top:105px;width:150px;height:0;border-top:1px dashed #9AA6FF;transform-origin:0 0;transform:rotate(30deg)"></div>
+            <div style="position:absolute;left:322.3px;top:154px;width:150px;height:0;border-top:1px dashed #9AA6FF;transform-origin:0 0;transform:rotate(10deg)"></div>
+            <div style="position:absolute;left:322.3px;top:206px;width:150px;height:0;border-top:1px dashed #9AA6FF;transform-origin:0 0;transform:rotate(-10deg)"></div>
+            <div style="position:absolute;left:340.1px;top:255px;width:150px;height:0;border-top:1px dashed #9AA6FF;transform-origin:0 0;transform:rotate(-30deg)"></div>
+            <div style="position:absolute;left:373.6px;top:294.9px;width:150px;height:0;border-top:1px dashed #9AA6FF;transform-origin:0 0;transform:rotate(-50deg)"></div>
+
+            <div style="position:absolute;left:373.6px;top:63.6px;width:52.1px;height:3px;background:#2457D6;transform-origin:0 50%;transform:rotate(130deg)"></div>
+            <div style="position:absolute;left:340.1px;top:103.5px;width:52.1px;height:3px;background:#2457D6;transform-origin:0 50%;transform:rotate(110deg)"></div>
+            <div style="position:absolute;left:322.3px;top:152.5px;width:52px;height:3px;background:#2457D6;transform-origin:0 50%;transform:rotate(90deg)"></div>
+            <div style="position:absolute;left:322.3px;top:204.5px;width:52.1px;height:3px;background:#2457D6;transform-origin:0 50%;transform:rotate(70deg)"></div>
+            <div style="position:absolute;left:340.1px;top:253.5px;width:52.1px;height:3px;background:#2457D6;transform-origin:0 50%;transform:rotate(50deg)"></div>
+
+            <div style="position:absolute;left:363.6px;top:55.1px;width:16px;height:16px;border-radius:50%;background:#2457D6;border:2px solid #FFFFFF;box-sizing:border-box"></div>
+            <div style="position:absolute;left:330.1px;top:95px;width:16px;height:16px;border-radius:50%;background:#2457D6;border:2px solid #FFFFFF;box-sizing:border-box"></div>
+            <div style="position:absolute;left:312.3px;top:144px;width:16px;height:16px;border-radius:50%;background:#2457D6;border:2px solid #FFFFFF;box-sizing:border-box"></div>
+            <div style="position:absolute;left:312.3px;top:196px;width:16px;height:16px;border-radius:50%;background:#FFFFFF;border:2px solid #2457D6;box-sizing:border-box"></div>
+            <div style="position:absolute;left:330.1px;top:245px;width:16px;height:16px;border-radius:50%;background:#FFFFFF;border:2px solid #2457D6;box-sizing:border-box"></div>
+            <div style="position:absolute;left:363.6px;top:284.9px;width:16px;height:16px;border-radius:50%;background:#FFFFFF;border:2px solid #2457D6;box-sizing:border-box"></div>
+
+            <div style="position:absolute;left:300px;top:58px;font-size:12px;font-weight:600">P1</div>
+            <div style="position:absolute;left:308px;top:98px;font-size:12px;font-weight:600">P2</div>
+            <div style="position:absolute;left:290px;top:147px;font-size:12px;font-weight:600">P3</div>
+            <div style="position:absolute;left:290px;top:199px;font-size:12px;font-weight:600">P4</div>
+            <div style="position:absolute;left:308px;top:248px;font-size:12px;font-weight:600">P5</div>
+            <div style="position:absolute;left:340px;top:303px;font-size:12px;font-weight:600">P6</div>
+
+            <div style="position:absolute;left:459px;top:169px;width:22px;height:22px;border-radius:50%;background:#D92D20;border:3px solid #FFFFFF;box-sizing:border-box"></div>
+            <div style="position:absolute;left:446px;top:198px;font-size:12px;font-weight:600;color:#D92D20">Objetivo</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:20px;color:#1A1F24">
+          <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" checked> Apuntar al objetivo</label>
+          <label style="display:flex;align-items:center;gap:8px"><input type="checkbox"> Los puntos siguen al objetivo</label>
+          <span style="margin-left:auto;display:flex;align-items:center;gap:12px"><span style="color:#5B6671">Trazo</span>
+            <label style="display:flex;align-items:center;gap:6px"><input type="radio" name="trazo"> Recto</label>
+            <label style="display:flex;align-items:center;gap:6px"><input type="radio" name="trazo" checked> Curva</label></span>
+        </div>
+      </section>
+
+      <div style="flex:0 1 400px;min-width:320px;display:flex;flex-direction:column;gap:20px">
+        <section style="background:#FFFFFF;border:1px solid #E3E6EA;border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:12px">
+          <h2 style="margin:0;font-size:15px;font-weight:600">Objetivo (mm)</h2>
+          <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px">
+            <div style="display:flex;flex-direction:column;gap:4px"><label for="tx" style="color:#5B6671;font-size:12px">X</label><input id="tx" type="number" value="-1000" style="padding:8px 10px;border:1px solid #CBD2D9;border-radius:6px;font:inherit;width:100%;box-sizing:border-box"></div>
+            <div style="display:flex;flex-direction:column;gap:4px"><label for="ty" style="color:#5B6671;font-size:12px">Y</label><input id="ty" type="number" value="0" style="padding:8px 10px;border:1px solid #CBD2D9;border-radius:6px;font:inherit;width:100%;box-sizing:border-box"></div>
+            <div style="display:flex;flex-direction:column;gap:4px"><label for="tz" style="color:#5B6671;font-size:12px">Z</label><input id="tz" type="number" value="450" style="padding:8px 10px;border:1px solid #CBD2D9;border-radius:6px;font:inherit;width:100%;box-sizing:border-box"></div>
+          </div>
+        </section>
+
+        <section style="background:#FFFFFF;border:1px solid #E3E6EA;border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:12px">
+          <h2 style="margin:0;font-size:15px;font-weight:600">Puntos (mm)</h2>
+          <div style="display:grid;grid-template-columns:28px 36px repeat(3,minmax(0,1fr)) 56px;gap:8px;align-items:center;color:#5B6671;font-size:12px">
+            <span></span><span>Punto</span><span>X</span><span>Y</span><span>Z</span><span>Alcance</span>
+          </div>
+          <sc-for list="{{points}}" as="p" hint-placeholder-count="6">
+            <div style="display:grid;grid-template-columns:28px 36px repeat(3,minmax(0,1fr)) 56px;gap:8px;align-items:center;font-variant-numeric:tabular-nums">
+              <input type="checkbox" checked="{{p.selected}}" aria-label="{{p.label}}">
+              <span style="font-weight:600">{{p.name}}</span><span>{{p.x}}</span><span>{{p.y}}</span><span>{{p.z}}</span><span style="color:#1A7F4B">OK</span>
+            </div>
+          </sc-for>
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding-top:4px;border-top:1px solid #E3E6EA">
+            <span style="color:#5B6671">Alinear selección</span>
+            <button style="padding:6px 12px;border:1px solid #CBD2D9;border-radius:6px;background:#FFFFFF;font:inherit">Igualar X</button>
+            <button style="padding:6px 12px;border:1px solid #CBD2D9;border-radius:6px;background:#FFFFFF;font:inherit">Igualar Y</button>
+            <button style="padding:6px 12px;border:1px solid #CBD2D9;border-radius:6px;background:#FFFFFF;font:inherit">Igualar Z</button>
+          </div>
+        </section>
+
+        <section style="background:#FFFFFF;border:1px solid #E3E6EA;border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;gap:12px">
+            <button style="flex:1;padding:10px 16px;border:0;border-radius:6px;background:#2457D6;color:#FFFFFF;font:inherit;font-weight:600">Generar programa</button>
+            <a href="Toma.dc.html" style="flex:1;box-sizing:border-box;text-align:center;padding:10px 16px;border:1px solid #CBD2D9;border-radius:6px;background:#FFFFFF;color:#1A1F24;text-decoration:none">Probar</a>
+          </div>
+        </section>
+      </div>
+
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const items = [
+      ['Cámara', 'Camara.dc.html'],
+      ['Brazo', 'Brazo.dc.html'],
+      ['Ruta', 'Ruta.dc.html'],
+      ['Toma de prueba', 'Toma.dc.html']
+    ];
+    const base = 'display:block;padding:10px 12px;border-radius:6px;text-decoration:none;font-weight:500;color:#1A1F24';
+    const active = 'display:block;padding:10px 12px;border-radius:6px;text-decoration:none;font-weight:600;color:#1B44AE;background:#E8EEFB';
+    const rows = [
+      ['P1', -756, -291, 330, true], ['P2', -671, -190, 375, true], ['P3', -626, -66, 420, true],
+      ['P4', -626, 66, 465, false], ['P5', -671, 190, 510, false], ['P6', -756, 291, 555, false]
+    ];
+    return {
+      nav: items.map((it, i) => ({ label: it[0], href: it[1], style: i === 2 ? active : base })),
+      points: rows.map((r) => ({ name: r[0], label: 'Seleccionar ' + r[0], x: r[1], y: r[2], z: r[3], selected: r[4] }))
+    };
+  }
+}
+</script>
+</body>
+</html>

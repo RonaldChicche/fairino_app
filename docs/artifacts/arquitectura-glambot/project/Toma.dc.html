@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Toma de prueba</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0}
+a{color:#2457D6}a:hover{color:#1B44AE}
+</style>
+</helmet>
+<div style="display:flex;flex-wrap:wrap;min-height:900px;background:#F3F4F6;font-family:'Public Sans',system-ui,sans-serif;color:#1A1F24;font-size:14px;line-height:1.45">
+
+  <nav style="flex:0 0 208px;box-sizing:border-box;padding:24px 16px;display:flex;flex-direction:column;gap:24px;background:#FFFFFF;border-right:1px solid #E3E6EA">
+    <div style="font-size:16px;font-weight:600;padding:0 12px">Glambot Studio</div>
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <sc-for list="{{nav}}" as="item" hint-placeholder-count="4">
+        <a href="{{item.href}}" style="{{item.style}}">{{item.label}}</a>
+      </sc-for>
+    </div>
+    <div style="margin-top:auto;display:flex;flex-direction:column;gap:8px;padding:0 12px;font-size:13px;color:#5B6671">
+      <div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:#1A7F4B"></div>Robot FR10 conectado</div>
+      <div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:#1A7F4B"></div>GoPro HERO10 por USB</div>
+    </div>
+  </nav>
+
+  <main style="flex:999 1 560px;min-width:0;box-sizing:border-box;padding:28px 32px;display:flex;flex-direction:column;gap:20px">
+    <h1 style="margin:0;font-size:22px;font-weight:600">Toma de prueba</h1>
+
+    <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+
+      <section style="flex:1 1 520px;min-width:0;background:#FFFFFF;border:1px solid #E3E6EA;border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:14px">
+        <div style="position:relative;aspect-ratio:16/9;background:#10151A;border-radius:6px;overflow:hidden;color:#FFFFFF">
+          <div style="position:absolute;left:50%;top:22%;width:64px;height:64px;margin-left:-32px;border-radius:50%;background:#3A4650"></div>
+          <div style="position:absolute;left:50%;top:50%;width:140px;height:160px;margin-left:-70px;border-radius:70px 70px 0 0;background:#2B353E"></div>
+          <div style="position:absolute;left:34.2%;width:31.6%;top:0;bottom:0;border-left:1px solid rgba(255,255,255,0.6);border-right:1px solid rgba(255,255,255,0.6);box-shadow:0 0 0 999px rgba(0,0,0,0.5)"></div>
+          <div style="position:absolute;left:12px;top:10px;font-size:12px;opacity:0.8">Vista previa en vivo · 480p</div>
+          <div style="position:absolute;right:12px;top:10px;font-size:12px;color:#FF8A80">● Grabando</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <button style="padding:10px 18px;border:0;border-radius:6px;background:#2457D6;color:#FFFFFF;font:inherit;font-weight:600">Ejecutar toma de prueba</button>
+          <button style="padding:10px 18px;border:1px solid #CBD2D9;border-radius:6px;background:#FFFFFF;font:inherit">Cancelar</button>
+          <span style="margin-left:auto;color:#5B6671">Ruta de 6 puntos · velocidad 20%</span>
+        </div>
+      </section>
+
+      <div style="flex:0 1 400px;min-width:320px;display:flex;flex-direction:column;gap:20px">
+        <section style="background:#FFFFFF;border:1px solid #E3E6EA;border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:14px">
+          <h2 style="margin:0;font-size:15px;font-weight:600">Pasos</h2>
+          <sc-for list="{{steps}}" as="s" hint-placeholder-count="5">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="{{s.dot}}"></div>
+              <div style="flex:1"><div style="font-weight:500">{{s.title}}</div><div style="color:#5B6671;font-size:13px">{{s.detail}}</div></div>
+              <span style="color:#5B6671;font-variant-numeric:tabular-nums">{{s.state}}</span>
+            </div>
+          </sc-for>
+          <div style="color:#5B6671;font-size:13px;padding-top:12px;border-top:1px solid #E3E6EA">El brazo no se mueve hasta que la cámara confirma que está grabando.</div>
+        </section>
+
+        <section style="background:#FFFFFF;border:1px solid #E3E6EA;border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:14px">
+          <h2 style="margin:0;font-size:15px;font-weight:600">Resultado</h2>
+          <div style="display:flex;gap:16px;align-items:center">
+            <div style="flex:0 0 96px;aspect-ratio:9/16;background:#10151A;border-radius:6px;display:grid;place-items:center;color:#FFFFFF;font-size:12px">9:16</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div><div style="color:#5B6671;font-size:12px">Duración real</div><div style="font-weight:600">3,1 s</div></div>
+              <div><div style="color:#5B6671;font-size:12px">Duración final</div><div style="font-weight:600">15,5 s</div></div>
+              <div><div style="color:#5B6671;font-size:12px">Tamaño</div><div style="font-weight:600">≈ 45 MB</div></div>
+            </div>
+          </div>
+          <button style="padding:10px 16px;border:1px solid #CBD2D9;border-radius:6px;background:#FFFFFF;font:inherit">Guardar como ruta aprobada</button>
+        </section>
+      </div>
+
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const items = [
+      ['Cámara', 'Camara.dc.html'],
+      ['Brazo', 'Brazo.dc.html'],
+      ['Ruta', 'Ruta.dc.html'],
+      ['Toma de prueba', 'Toma.dc.html']
+    ];
+    const base = 'display:block;padding:10px 12px;border-radius:6px;text-decoration:none;font-weight:500;color:#1A1F24';
+    const active = 'display:block;padding:10px 12px;border-radius:6px;text-decoration:none;font-weight:600;color:#1B44AE;background:#E8EEFB';
+    const dot = (kind) => {
+      const b = 'width:18px;height:18px;border-radius:50%;box-sizing:border-box;flex:0 0 18px;';
+      if (kind === 'done') return b + 'background:#1A7F4B;border:2px solid #1A7F4B';
+      if (kind === 'active') return b + 'background:#FFFFFF;border:5px solid #2457D6';
+      return b + 'background:#FFFFFF;border:2px solid #CBD2D9';
+    };
+    return {
+      nav: items.map((it, i) => ({ label: it[0], href: it[1], style: i === 3 ? active : base })),
+      steps: [
+        { title: 'Cuenta regresiva', detail: '3 s para que arranque la cámara', state: 'listo', dot: dot('done') },
+        { title: 'La cámara confirma que graba', detail: 'El brazo espera esta señal', state: 'listo', dot: dot('done') },
+        { title: 'El brazo recorre la ruta', detail: 'Estado del controlador: moviendo', state: 'en curso', dot: dot('active') },
+        { title: 'Fin del movimiento y detener cámara', detail: '', state: 'pendiente', dot: dot('pending') },
+        { title: 'Descargar y recortar a 9:16', detail: '', state: 'pendiente', dot: dot('pending') }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

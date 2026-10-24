@@ -1,0 +1,1372 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Simulador de toma</title>
+<style>
+  :root { color-scheme: dark; --bg:#14161a; --panel:#1c1f26; --line:#2c313b; --ink:#e6e9ef; --dim:#98a2b3; --acc:#f08c00;
+          --bad:#ff6b6b; --warn:#ffa94d; --good:#69db7c; }
+  * { box-sizing: border-box; }
+  body { margin:0; height:100vh; display:flex; flex-direction:column; background:var(--bg); color:var(--ink);
+         font:14px/1.45 -apple-system, system-ui, sans-serif; overflow:hidden; }
+  header { display:flex; gap:8px; align-items:center; padding:8px 12px; border-bottom:1px solid var(--line); }
+  header h1 { font-size:14px; margin:0 8px 0 0; font-weight:600; letter-spacing:.02em; }
+  main { flex:1; display:flex; min-height:0; }
+  #views { flex:1; display:flex; min-width:0; }
+  #view3d { flex:1; position:relative; min-width:0; }
+  #viewCart { flex:1; min-width:0; display:flex; flex-direction:column; gap:6px; padding:8px; }
+  #viewCart canvas { flex:1; width:100%; min-height:0; background:#0f1115; border:1px solid var(--line); border-radius:4px; }
+  #views.only3d #viewCart { display:none; }
+  #views.onlycart #view3d { display:none; }
+  #lensWrap { width:300px; padding:12px; border-left:1px solid var(--line); display:flex; flex-direction:column;
+              gap:8px; overflow-y:auto; }   /* el lente mide 490 px fijos: en ventana baja, mejor scroll que recorte */
+  #lens { width:276px; height:490px; background:#000; border:1px solid var(--line); }
+  aside { width:360px; border-left:1px solid var(--line); padding:12px; overflow-y:auto; background:var(--panel); }
+  h2 { font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--dim); margin:16px 0 8px; }
+  h2:first-child { margin-top:0; }
+  label { display:flex; align-items:center; gap:8px; margin:6px 0; font-size:12px; color:var(--dim); }
+  label span { width:92px; flex:none; }
+  input[type=range] { flex:1; min-width:0; accent-color:var(--acc); }
+  input[type=number], input[type=text] { background:#0f1115; color:var(--ink); border:1px solid var(--line);
+    border-radius:4px; padding:4px 6px; font:inherit; font-size:12px; min-width:0; }
+  .val { width:56px; text-align:right; font-variant-numeric:tabular-nums; color:var(--ink); flex:none; }
+  input.val { width:66px; padding:3px 5px; font-size:12px; }
+  input.val:focus { outline:1px solid var(--acc); }
+  .u { flex:none; width:22px; font-style:normal; font-size:11px; color:var(--dim); }
+  button { background:#252a33; color:var(--ink); border:1px solid var(--line); border-radius:5px;
+    padding:5px 10px; font:inherit; font-size:12px; cursor:pointer; }
+  button:hover { background:#2f3540; }
+  button.primary { background:var(--acc); border-color:var(--acc); color:#1a1206; font-weight:600; }
+  button.on { background:var(--acc); border-color:var(--acc); color:#1a1206; }
+
+  /* auto-fit y no 3 columnas fijas: en el panel de 360 px cada columna se queda en ~94 px y con
+     una casilla de menos de 50 px el número se recortaría. Así baja a 2 o 1 columna antes de romper. */
+  .axes { display:grid; grid-template-columns:repeat(auto-fit, minmax(100px, 1fr)); gap:6px; }
+  .ax { border:1px solid var(--line); border-radius:5px; padding:6px; min-width:0; }
+  .ax .axname { display:block; font-size:10px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim);
+    margin-bottom:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .ax .axrow { display:flex; align-items:center; gap:2px; flex-wrap:wrap; }
+  .ax .axrow button { padding:2px 0; width:20px; flex:none; text-align:center; }
+  /* min-width y no shrink libre: en 94 px de columna el número se recortaría; así el botón baja de línea */
+  .axes input.val { width:auto; flex:1 1 46px; min-width:46px; padding:2px 1px; text-align:center; }
+  .axes input.val::-webkit-outer-spin-button,
+  .axes input.val::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }  /* no caben */
+  .axes input.val { appearance:textfield; -moz-appearance:textfield; }
+  .axes .u { display:none; }
+  .axes input[type=range] { width:100%; margin-top:5px; }
+  .axes .axrow.wide button { flex:1 1 40%; width:auto; }
+  :focus-visible { outline:2px solid var(--acc); outline-offset:1px; }
+
+  .chk { color:var(--ink); }
+  .chk input { accent-color:var(--acc); }
+  .row { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+
+  .wp { display:flex; align-items:center; gap:6px; padding:5px 7px; border:1px solid var(--line);
+        border-radius:5px; margin-bottom:4px; cursor:pointer; font-size:12px; }
+  .wp.sel { border-color:var(--acc); background:#2a2213; }
+  .wp.over { border-color:var(--good); background:#16281b; }
+  .wp.good { border-color:#2f5d3a; }
+  .wp.warn { border-color:var(--warn); background:#2a2113; }
+  .wp.bad { border-color:var(--bad); background:#2b1517; }
+  .wp.bad .pos { color:#ff8787; }
+  .wp.unset { border-style:dashed; }
+  .wp.dragging { opacity:.4; }
+  .wp .grip { color:var(--dim); cursor:grab; flex:none; letter-spacing:-2px; }
+  .wp .n { width:18px; color:var(--dim); flex:none; }
+  .wp .st { width:12px; flex:none; text-align:center; font-size:11px; color:var(--dim); }
+  .wp.good .st { color:var(--good); }
+  .wp.warn .st { color:var(--warn); }
+  .wp.bad .st { color:var(--bad); }
+  .wp .pos { flex:1; color:var(--dim); font-variant-numeric:tabular-nums; font-size:11px; }
+  .why { font-size:11px; margin:-2px 0 5px 22px; color:#ff8787; }
+  .why.warn { color:#ffc078; }
+  .sugg { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--dim); margin:-2px 0 6px 22px; }
+  .seg { display:flex; align-items:center; gap:6px; margin:0 0 4px 22px; font-size:11px; color:var(--dim); }
+  .seg select, .seg input { font-size:11px; padding:2px 4px; }
+  .seg input[type=number] { width:52px; }
+
+  .vbox { border:1px solid var(--line); border-radius:5px; padding:7px 9px; font-size:12px; color:var(--dim); }
+  .vbox.ok { border-color:#2f5d3a; color:#b2f2bb; }
+  .vbox.warn { border-color:var(--warn); color:#ffd8a8; }
+  .vbox.err { border-color:var(--bad); color:#ff8787; }
+  .rt { display:flex; align-items:center; gap:6px; padding:5px 7px; border:1px solid var(--line);
+        border-radius:5px; margin-bottom:4px; cursor:pointer; font-size:12px; }
+  .rt:hover { background:#252a33; }
+  .rt.cur { border-color:var(--acc); background:#2a2213; }
+
+  #msg { margin-left:auto; font-size:12px; color:var(--dim); max-width:420px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #msg.err { color:#ff8787; }
+  #msg.ok { color:var(--good); }
+  .hint { color:var(--dim); font-size:11px; margin:6px 0 0; }
+  kbd { background:#0f1115; border:1px solid var(--line); border-radius:3px; padding:0 4px; font-size:11px; }
+  details summary { color:var(--dim); font-size:11px; text-transform:uppercase; letter-spacing:.08em; cursor:pointer; margin:12px 0 4px; }
+</style>
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+</head>
+<body>
+
+<header>
+  <h1>Simulador de toma</h1>
+  <input type="text" id="name" value="ruta-nueva" size="14" aria-label="Nombre de la ruta">
+  <button id="save">Guardar</button>
+  <button id="validate">Validar</button>
+  <button id="generate" class="primary">Generar Lua</button>
+  <button id="upload">Cargar al FAIRINO</button>
+  <button id="play">▶ Reproducir</button>
+  <span id="msg"></span>
+</header>
+
+<main>
+  <div id="views" class="both">
+    <div id="view3d"></div>
+    <div id="viewCart">
+      <canvas id="cartFront"></canvas>
+      <canvas id="cartTop"></canvas>
+    </div>
+  </div>
+  <div id="lensWrap">
+    <canvas id="lens"></canvas>
+    <div class="hint">Lo que vería la cámara · 9:16<br>
+      Arrastra aquí para girar alrededor del objetivo, rueda para acercar.<br>
+      <kbd>G</kbd> marca un punto · <kbd>espacio</kbd> reproduce</div>
+  </div>
+  <aside>
+    <h2>Vista</h2>
+    <div class="row" id="modes">
+      <button data-mode="3d">3D</button>
+      <button data-mode="cart">Cartesiana</button>
+      <button data-mode="both" class="on">Ambas</button>
+    </div>
+    <label class="chk"><input type="checkbox" id="showPath" checked> Mostrar ruta y puntos</label>
+    <label class="chk"><input type="checkbox" id="showArm" checked> Mostrar brazo en palitos</label>
+    <label class="chk"><input type="checkbox" id="showReach" checked> Mostrar esfera de alcance</label>
+
+    <h2>Cámara por ejes</h2>
+    <div class="axes">
+      <div class="ax">
+        <span class="axname" title="X: adelante y atrás">X adelante</span>
+        <div class="axrow"><button data-nudge="camx" data-dir="-1" aria-label="Cámara X, un paso menos">−</button><b class="val" id="camxV"></b><button data-nudge="camx" data-dir="1" aria-label="Cámara X, un paso más">+</button></div>
+        <input type="range" id="camx" min="-2000" max="2000" step="5" aria-label="Cámara X adelante, mm">
+      </div>
+      <div class="ax">
+        <span class="axname" title="Y: izquierda y derecha">Y izq·der</span>
+        <div class="axrow"><button data-nudge="camy" data-dir="-1" aria-label="Cámara Y, un paso menos">−</button><b class="val" id="camyV"></b><button data-nudge="camy" data-dir="1" aria-label="Cámara Y, un paso más">+</button></div>
+        <input type="range" id="camy" min="-2000" max="2000" step="5" aria-label="Cámara Y izquierda o derecha, mm">
+      </div>
+      <div class="ax">
+        <span class="axname" title="Z: altura">Z altura</span>
+        <div class="axrow"><button data-nudge="camz" data-dir="-1" aria-label="Cámara Z, un paso menos">−</button><b class="val" id="camzV"></b><button data-nudge="camz" data-dir="1" aria-label="Cámara Z, un paso más">+</button></div>
+        <input type="range" id="camz" min="-2000" max="2000" step="5" aria-label="Cámara Z altura, mm">
+      </div>
+    </div>
+    <label><span>Paso</span><input type="number" id="step" value="25" min="1" step="5" aria-label="Paso de los botones menos y más, mm"><i class="u">mm</i></label>
+    <p class="hint" id="polar"></p>
+    <label><span>Campo visión</span><input type="range" id="fov" min="20" max="110" step="1" aria-label="Campo de visión horizontal, grados"><b class="val" id="fovV"></b></label>
+
+    <h2>Escena</h2>
+    <label><span>Alto persona</span><input type="range" id="sh" min="300" max="2100" step="10" aria-label="Alto de la persona, mm"><b class="val" id="shV"></b></label>
+    <label><span>Pedestal</span><input type="range" id="mount" min="0" max="1800" step="10" aria-label="Alto del pedestal, mm"><b class="val" id="mountV"></b></label>
+    <label><span>Ajuste Z mira</span><input type="range" id="aimz" min="-800" max="800" step="10" aria-label="Ajuste Z de la mira, mm"><b class="val" id="aimzV"></b></label>
+    <p class="hint">Todo en milímetros respecto a la base del robot. La cámara apunta a la cabeza;
+      el ajuste Z mueve la mira arriba o abajo de ella.</p>
+    <details>
+      <summary>Objetivo X e Y (poco usado)</summary>
+      <label><span>Objetivo X</span><input type="range" id="tx" min="-1400" max="1400" step="10" aria-label="Objetivo X, mm"><b class="val" id="txV"></b></label>
+      <label><span>Objetivo Y</span><input type="range" id="ty" min="-1400" max="1400" step="10" aria-label="Objetivo Y, mm"><b class="val" id="tyV"></b></label>
+      <p class="hint">Dónde se para el invitado. Mueve toda la ruta con él.</p>
+    </details>
+
+    <h2>Validación</h2>
+    <div class="vbox" id="valSummary" role="status"></div>
+    <div class="vbox" id="robotBox" style="display:none; margin-top:6px"></div>
+    <p class="hint">La esfera de alcance solo mide distancia. «Validar» pregunta al servidor punto por punto:
+      cinemática inversa y límites articulares. Verde = el servidor dijo que sí para <em>esta</em> posición;
+      gris a rayas = sin validar.</p>
+
+    <h2>Puntos <button id="mark" style="float:right">+ marcar (G)</button></h2>
+    <div id="list"></div>
+    <p class="hint" id="empty">Mueve la cámara y pulsa <kbd>G</kbd> para marcar el primer punto.</p>
+    <div id="wpEdit" style="display:none">
+      <div class="axes">
+        <div class="ax">
+          <span class="axname">X adelante</span>
+          <div class="axrow"><button data-nudge="wx" data-dir="-1" aria-label="Punto X, un paso menos">−</button><b class="val" id="wxV"></b><button data-nudge="wx" data-dir="1" aria-label="Punto X, un paso más">+</button></div>
+          <input type="range" id="wx" min="-2000" max="2000" step="5" aria-label="Punto X adelante, mm">
+        </div>
+        <div class="ax">
+          <span class="axname">Y izq·der</span>
+          <div class="axrow"><button data-nudge="wy" data-dir="-1" aria-label="Punto Y, un paso menos">−</button><b class="val" id="wyV"></b><button data-nudge="wy" data-dir="1" aria-label="Punto Y, un paso más">+</button></div>
+          <input type="range" id="wy" min="-2000" max="2000" step="5" aria-label="Punto Y izquierda o derecha, mm">
+        </div>
+        <div class="ax">
+          <span class="axname">Z altura</span>
+          <div class="axrow"><button data-nudge="wz" data-dir="-1" aria-label="Punto Z, un paso menos">−</button><b class="val" id="wzV"></b><button data-nudge="wz" data-dir="1" aria-label="Punto Z, un paso más">+</button></div>
+          <input type="range" id="wz" min="-2000" max="2000" step="5" aria-label="Punto Z altura, mm">
+        </div>
+      </div>
+      <p class="hint">Punto seleccionado, en milímetros respecto al objetivo.</p>
+    </div>
+    <div id="multiMove" style="display:none">
+      <p class="hint" id="multiCount"></p>
+      <div class="axes">
+        <div class="ax">
+          <span class="axname">X adelante</span>
+          <div class="axrow wide"><button data-move="0" data-dir="-1" aria-label="Mover la selección en X, un paso menos">−</button><button data-move="0" data-dir="1" aria-label="Mover la selección en X, un paso más">+</button></div>
+        </div>
+        <div class="ax">
+          <span class="axname">Y izq·der</span>
+          <div class="axrow wide"><button data-move="1" data-dir="-1" aria-label="Mover la selección en Y, un paso menos">−</button><button data-move="1" data-dir="1" aria-label="Mover la selección en Y, un paso más">+</button></div>
+        </div>
+        <div class="ax">
+          <span class="axname">Z altura</span>
+          <div class="axrow wide"><button data-move="2" data-dir="-1" aria-label="Mover la selección en Z, un paso menos">−</button><button data-move="2" data-dir="1" aria-label="Mover la selección en Z, un paso más">+</button></div>
+        </div>
+      </div>
+      <p class="hint">Mueven todos los seleccionados el «paso» de arriba.</p>
+    </div>
+    <p class="hint">Clic selecciona · <kbd>⌘</kbd>/<kbd>Ctrl</kbd>+clic añade o quita ·
+      <kbd>⇧</kbd>+clic selecciona un rango · <kbd>supr</kbd> borra la selección.</p>
+
+    <h2>Rutas <button id="reloadRoutes" style="float:right" aria-label="Recargar la lista de rutas">↻</button></h2>
+    <div id="routeList"></div>
+
+    <h2>Ejecución</h2>
+    <label><span>Velocidad %</span><input type="range" id="speed" min="5" max="100" step="5" aria-label="Velocidad, porcentaje"><b class="val" id="speedV"></b></label>
+    <label><span>Blend mm</span><input type="range" id="blend" min="-1" max="50" step="1" aria-label="Radio de blending, mm"><b class="val" id="blendV"></b></label>
+    <label><span>Offset cámara</span><input type="range" id="coff" min="0" max="300" step="5" aria-label="Offset de la cámara respecto a la brida, mm"><b class="val" id="coffV"></b></label>
+    <label><span>Semilla IK</span><input type="text" id="seed" placeholder="6 ángulos de planner.py" aria-label="Semilla IK: 6 ángulos"></label>
+    <p class="hint">La semilla sale de <code>planner.py</code>, que corre en la instancia contra el
+      controlador. Sin ella se guarda la ruta igual, pero no se genera el Lua.</p>
+    <label><span>Vista previa s</span><input type="range" id="dur" min="4" max="60" step="1" aria-label="Duración de la vista previa, segundos"><b class="val" id="durV"></b></label>
+    <p class="hint">Solo afecta la reproducción en pantalla. No predice cuánto tarda el robot.</p>
+  </aside>
+</main>
+
+<script type="module">
+import * as THREE from "three";
+
+THREE.Object3D.DEFAULT_UP = new THREE.Vector3(0, 0, 1);   // eje Z arriba, como FAIRINO
+
+// ── Estado: es exactamente el JSON que se guarda y que lee routes.py ───────────
+const spec = {
+  name: "ruta-nueva",
+  target: [-900, 0, 589.5],           // la cabeza, en coordenadas de la BASE del robot
+  subject_height: 1700,
+  aim_z_offset: 0,                    // sube o baja la mira respecto a la cabeza
+  robot: { mount_z: 1000, reach_mm: 1400 },   // altura del pedestal y alcance del FR10
+  camera: { fov_h_deg: 55, offset_mm: 100 },
+  motion: { speed: 20, acc: 50, blend_mm: 10, camera_timeout_s: 30 },
+  seed_joints: null,
+  waypoints: [],
+  segments: [],
+};
+// cam es la posición de la cámara libre respecto al objetivo, por ejes: x adelante, y izquierda-derecha, z altura
+const ui = { cam: new THREE.Vector3(900, 0, -80), dur: 28, sel: [], playing: false, t0: 0, mode: "both" };
+const validation = { state: "none", data: null, error: "", stamp: "" };
+const generated = { name: "", stamp: "" };   // qué ruta describe el .lua que hay en el servidor
+let dragFrom = null;
+let nextId = 1;
+
+const $ = id => document.getElementById(id);
+const msg = (text, kind = "") => {
+  const m = $("msg");
+  m.textContent = text;
+  m.title = text;   // la barra recorta con puntos suspensivos y los errores del servidor son largos
+  m.className = kind;
+};
+const target = () => new THREE.Vector3(...spec.target);
+const primaryIdx = () => ui.sel.length ? ui.sel[ui.sel.length - 1] : null;
+const soloIdx = () => ui.sel.length === 1 ? ui.sel[0] : null;
+const stepMm = () => Math.max(0.1, Number($("step").value) || 10);
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+
+// ── Escena ────────────────────────────────────────────────────────────────────
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x14161a);
+scene.add(new THREE.HemisphereLight(0xbfd4ff, 0x30302c, 2.2));
+const sun = new THREE.DirectionalLight(0xffffff, 1.2); sun.position.set(1200, 900, 2000); scene.add(sun);
+
+const grid = new THREE.GridHelper(6000, 30, 0x39414f, 0x252a33);
+grid.rotation.x = Math.PI / 2;                       // de plano XZ a plano XY
+scene.add(grid);
+const axes = new THREE.AxesHelper(300);               // base del robot, en el origen
+scene.add(axes);
+
+// La cabeza es el objetivo: su centro está a HEAD_FRAC de la altura total.
+const HEAD_FRAC = 0.935;
+
+const person = new THREE.Group();
+const skin = new THREE.MeshLambertMaterial({ color: 0x6d8bb5 });
+const legs = new THREE.Mesh(new THREE.CylinderGeometry(1, 1.2, 1, 14), skin);
+const torso = new THREE.Mesh(new THREE.CylinderGeometry(1, 0.85, 1, 16), skin);
+const head = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 14), skin);
+legs.rotation.x = torso.rotation.x = Math.PI / 2;     // los cilindros de three son Y arriba
+person.add(legs, torso, head);
+scene.add(person);
+
+// Se dibuja por encima de todo para no perderlo dentro de la cabeza
+const targetDot = new THREE.Mesh(new THREE.SphereGeometry(26, 16, 12),
+  new THREE.MeshBasicMaterial({ color: 0xf08c00, depthTest: false }));
+targetDot.renderOrder = 2;
+scene.add(targetDot);
+
+// Esfera de alcance: solo la distancia máxima. Entrar en ella es necesario pero no suficiente;
+// quien decide de verdad es /api/validate.
+const reachBall = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 16),
+  new THREE.MeshBasicMaterial({ color: 0x4d5f7a, wireframe: true, transparent: true, opacity: 0.18 }));
+scene.add(reachBall);
+
+// La brida va camera_offset mm por detrás de la cámara sobre el eje óptico, que apunta al objetivo
+const flangeReach = offset => {
+  const v = new THREE.Vector3(...offset), len = v.length() || 1;
+  return v.multiplyScalar(1 + spec.camera.offset_mm / len).add(target()).length();
+};
+
+const pathLine = new THREE.Line(new THREE.BufferGeometry(),
+  new THREE.LineBasicMaterial({ color: 0xf08c00 }));
+scene.add(pathLine);
+const marks = new THREE.Group(); scene.add(marks);
+const armGroup = new THREE.Group(); scene.add(armGroup);
+
+const armLine = new THREE.LineBasicMaterial({ color: 0x9ad0ff });
+const armJoint = new THREE.MeshBasicMaterial({ color: 0x74c0fc });
+
+function clearGroup(g) {
+  g.children.forEach(o => o.geometry && o.geometry.dispose());
+  g.clear();
+}
+
+// ── Cámaras ───────────────────────────────────────────────────────────────────
+const shotCam = new THREE.PerspectiveCamera(60, 9 / 16, 10, 30000);
+const gizmoCam = new THREE.PerspectiveCamera(60, 9 / 16, 10, 400);   // cono corto, solo para dibujarlo
+const shotHelper = new THREE.CameraHelper(gizmoCam); scene.add(shotHelper);
+const viewCam = new THREE.PerspectiveCamera(50, 1, 10, 40000);
+const orbit = { az: 35, el: 22, dist: 3200 };
+
+const view3d = $("view3d");
+const rView = new THREE.WebGLRenderer({ antialias: true }); view3d.appendChild(rView.domElement);
+const rLens = new THREE.WebGLRenderer({ antialias: true, canvas: $("lens") });
+
+function offsetFrom(dist, azDeg, elDeg) {
+  const az = azDeg * Math.PI / 180, el = elDeg * Math.PI / 180;
+  return new THREE.Vector3(dist * Math.cos(el) * Math.cos(az),
+                           dist * Math.cos(el) * Math.sin(az),
+                           dist * Math.sin(el));
+}
+function placeShotCam() {
+  const off = ui.cam.length() < 1 ? new THREE.Vector3(1, 0, 0) : ui.cam;
+  shotCam.position.copy(target()).add(off);
+  shotCam.lookAt(target());
+  const h = spec.camera.fov_h_deg * Math.PI / 180;
+  shotCam.fov = 2 * Math.atan(Math.tan(h / 2) / (9 / 16)) * 180 / Math.PI;  // three usa FOV vertical
+  shotCam.updateProjectionMatrix();
+  gizmoCam.position.copy(shotCam.position);
+  gizmoCam.quaternion.copy(shotCam.quaternion);
+  gizmoCam.fov = shotCam.fov;
+  gizmoCam.updateProjectionMatrix();
+  gizmoCam.updateMatrixWorld();
+  shotHelper.update();
+}
+
+// ── Geometría del arco: el mismo criterio que arc_offsets() de routes.py ───────
+function chordNormal(a, b) {
+  const u = b.clone().sub(a);
+  if (u.length() < 1e-6) return new THREE.Vector3(0, 0, 1);
+  u.normalize();
+  const mid = a.clone().add(b).multiplyScalar(0.5);
+  let radial = mid.clone().sub(u.clone().multiplyScalar(mid.dot(u)));
+  if (radial.length() < 1e-4) {
+    const up = new THREE.Vector3(0, 0, 1);
+    radial = up.clone().sub(u.clone().multiplyScalar(up.dot(u)));
+  }
+  return radial.normalize();
+}
+function densify() {
+  const pts = [];
+  spec.waypoints.forEach((w, i) => {
+    const a = new THREE.Vector3(...w.offset);
+    pts.push(a);
+    const next = spec.waypoints[i + 1];
+    if (!next) return;
+    const b = new THREE.Vector3(...next.offset);
+    const seg = segmentOf(w.id, next.id);
+    if (seg.type !== "arc" || Math.abs(seg.bulge_mm) < 1e-6) return;
+    const mid = a.clone().add(b).multiplyScalar(0.5);
+    const via = mid.clone().add(chordNormal(a, b).multiplyScalar(seg.bulge_mm));
+    const ctrl = via.clone().multiplyScalar(2).sub(mid);
+    for (let k = 1; k <= seg.samples; k++) {
+      const t = k / (seg.samples + 1), s = 1 - t;
+      pts.push(a.clone().multiplyScalar(s * s)
+        .add(ctrl.clone().multiplyScalar(2 * s * t))
+        .add(b.clone().multiplyScalar(t * t)));
+    }
+  });
+  return pts;
+}
+// Leer un tramo no puede guardarlo: si dibujar la lista añadiera tramos por defecto a spec.segments,
+// la huella de la validación cambiaría sola y el informe recién pedido nacería desactualizado.
+const DEFAULT_SEG = { type: "line", bulge_mm: 0, samples: 6 };
+const segmentOf = (from, to) =>
+  spec.segments.find(s => s.from === from && s.to === to) || { from, to, ...DEFAULT_SEG };
+function segmentBetween(from, to) {
+  let seg = spec.segments.find(s => s.from === from && s.to === to);
+  if (!seg) { seg = { from, to, ...DEFAULT_SEG }; spec.segments.push(seg); }
+  return seg;
+}
+
+// ── Validación ────────────────────────────────────────────────────────────────
+// Huella de lo que el servidor validó: si cambia, el resultado anterior ya no describe esta ruta.
+const geomStamp = () => JSON.stringify([spec.target, spec.robot, spec.camera.offset_mm,
+                                        spec.waypoints, spec.segments]);
+const isStale = () => validation.state === "done" && validation.stamp !== geomStamp();
+
+// El informe valida la ruta ya densificada: hay entradas sin id que son intermedios de un arco, así
+// que el índice del informe no es el de la lista y solo el id identifica a un punto marcado. Sin id
+// que case no hay veredicto: emparejar por posición daría el de otro punto.
+function checkOf(i) {
+  if (validation.state !== "done") return null;
+  const w = spec.waypoints[i];
+  const pts = validation.data.puntos;
+  if (!w || !Array.isArray(pts)) return null;
+  return pts.find(p => p.id != null && p.id === w.id) || null;
+}
+
+const far = i => flangeReach(spec.waypoints[i].offset) > spec.robot.reach_mm;
+
+// Verde solo si el servidor validó ESTE punto en ESTA posición. Un fallo se mantiene aunque la ruta
+// haya cambiado (equivocarse por exceso de alarma no rompe nada); un «alcanzable» caducado, no.
+// `stale` se pasa hecho porque calcularlo recorre todo el spec y esto se llama punto por punto.
+function stateOf(i, stale = isStale()) {
+  const c = checkOf(i);
+  if (c && !c.ok) return "bad";
+  if (c && !stale) return "ok";
+  return far(i) ? "warn" : "unset";
+}
+
+// Reparto de los fallos del informe: cada uno acaba pintado en su punto, colgado de su tramo o
+// contado como suelto. Ninguno puede desaparecer por el camino.
+function troubles() {
+  const out = { porTramo: new Map(), sueltos: 0, fallos: 0 };
+  if (validation.state !== "done" || !Array.isArray(validation.data.puntos)) return out;
+  const byId = new Map(spec.waypoints.map((w, i) => [w.id, i]));
+  let owner = null;
+  for (const p of validation.data.puntos) {
+    if (!p.ok) out.fallos++;
+    if (p.id != null) {
+      owner = byId.has(p.id) ? byId.get(p.id) : null;
+      if (!p.ok && owner === null) out.sueltos++;   // el informe habla de un punto que ya no está
+      continue;
+    }
+    if (p.ok) continue;
+    if (owner === null) out.sueltos++;
+    else out.porTramo.set(owner, (out.porTramo.get(owner) || 0) + 1);
+  }
+  return out;
+}
+
+// De qué robot habla el informe. El backend valida con la cinemática que tenga cargada (hoy solo la
+// del FR10): si la ruta es de otro brazo, el informe no dice si ese brazo llega a los puntos.
+function robotNotice() {
+  if (validation.state !== "done") return null;
+  const d = validation.data;
+  const rv = d.robot_validado && typeof d.robot_validado === "object" ? d.robot_validado : null;
+  const modelo = rv && (rv.modelo || rv.model) ? String(rv.modelo || rv.model) : "";
+  const reach = Number(rv ? rv.reach_mm : d.reach_mm);
+  const validado = isFinite(reach) && reach > 0 ? reach : null;
+  let aviso = typeof d.aviso === "string" ? d.aviso.trim() : "";
+  // Si el backend todavía no manda 'aviso', el desajuste de alcance se detecta igual aquí.
+  if (!aviso && validado && Math.abs(validado - spec.robot.reach_mm) > 1) {
+    aviso = `AVISO: la ruta es de un brazo de ${Math.round(spec.robot.reach_mm)} mm de alcance y el `
+          + `informe se ha hecho con uno de ${Math.round(validado)} mm: no dice si el tuyo llega.`;
+  }
+  if (!aviso && !modelo && !validado) return null;
+  return { aviso, modelo, reach: validado };
+}
+
+// Un informe que no se pueda casar con la ruta que hay en pantalla no es una validación de esta ruta.
+function reportProblem(r) {
+  if (!r.ok) return r.error || `HTTP ${r.status}`;
+  const d = r.data;
+  if (!d || typeof d !== "object" || !Array.isArray(d.puntos)) {
+    return "el servidor respondió algo que no es una validación";
+  }
+  if (d.ok !== true) return "";
+  if (!d.puntos.length) return "el informe no trae ningún punto pero se declara válido";
+  const vistos = new Set(d.puntos.filter(p => p.id != null).map(p => p.id));
+  const faltan = spec.waypoints.filter(w => !vistos.has(w.id)).length;
+  if (faltan) return `el informe se declara válido pero no menciona ${faltan} punto(s) de la ruta`;
+  return "";
+}
+
+async function postJSON(url, body) {
+  let res;
+  try {
+    res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" },
+                             body: JSON.stringify(body ?? {}) });
+  } catch (e) {
+    return { ok: false, offline: true, data: null, error: `sin respuesta del servidor (${e.message})` };
+  }
+  const text = await res.text();
+  let data = null;
+  try { data = JSON.parse(text); } catch { /* el servidor puede devolver texto plano en un fallo */ }
+  const d = data || {};
+  const error = res.ok ? null
+    : [d.error || d.resumen || d.mensaje || text.trim().slice(0, 300) || `HTTP ${res.status}`, d.detalle]
+        .filter(Boolean).join(" · ");
+  return { ok: res.ok, status: res.status, data, text, error };
+}
+
+// Devuelve true solo si el informe da por alcanzable cada punto: `ok` global y `ok` de cada entrada
+// tienen que coincidir, porque de este booleano depende que se genere el Lua.
+async function runValidation() {
+  const name = routeName();
+  if (!name) return false;
+  const enviado = geomStamp();   // la ruta puede cambiar mientras el servidor responde
+  validation.state = "running";
+  validation.error = "";
+  renderValidation();
+  const r = await postJSON(`/api/validate/${name}`, spec);
+  const problema = reportProblem(r);
+  if (problema) {
+    validation.state = "error";
+    validation.data = null;
+    validation.error = problema;
+    renderValidation();
+    return false;
+  }
+  validation.state = "done";
+  validation.data = r.data;
+  validation.stamp = enviado;
+  validation.error = "";
+  return r.data.ok === true && r.data.puntos.every(p => p.ok === true);
+}
+
+function renderValidation() {
+  const box = $("valSummary");
+  renderRobot();
+  if (validation.state === "none") {
+    box.className = "vbox";
+    box.textContent = "Sin validar. Pulsa «Validar» para comprobar cada punto contra la cinemática.";
+    return;
+  }
+  if (validation.state === "running") {
+    box.className = "vbox";
+    box.textContent = "Validando…";
+    return;
+  }
+  if (validation.state === "error") {
+    box.className = "vbox err";
+    box.textContent = `No se pudo validar: ${validation.error}`;
+    return;
+  }
+  const d = validation.data;
+  const t = troubles();
+  const stale = isStale();
+  const limpio = d.ok === true && !t.fallos;
+  box.className = "vbox " + (stale ? "warn" : limpio ? "ok" : "err");
+  const partes = [];
+  if (stale) partes.push("la ruta cambió desde la última validación: vuelve a validar");
+  partes.push(d.resumen || (limpio ? "todos los puntos son alcanzables" : `${t.fallos} punto(s) inválidos`));
+  if (t.sueltos) partes.push(`${t.sueltos} fallo(s) del informe no se pueden situar en la lista`);
+  if (!t.fallos && d.ok !== true) partes.push("el servidor no da la ruta por válida");
+  box.textContent = partes.join(" · ");
+}
+
+// El aviso de con qué robot se validó va en su propia caja: enterrado en el resumen se pierde.
+function renderRobot() {
+  const box = $("robotBox");
+  const info = validation.state === "done" ? robotNotice() : null;
+  if (!info) { box.style.display = "none"; box.textContent = ""; return; }
+  box.style.display = "block";
+  box.className = "vbox" + (info.aviso ? " err" : "");
+  const ficha = `Validado con la cinemática del ${info.modelo || "robot del servidor"}`
+    + (info.reach ? ` (${Math.round(info.reach)} mm)` : "")
+    + ` · la ruta declara ${Math.round(spec.robot.reach_mm)} mm de alcance.`;
+  box.textContent = info.aviso ? `${info.aviso} ${ficha}` : ficha;
+  box.title = box.textContent;
+}
+
+// La respuesta no dice si 'offset' de la sugerencia es el desplazamiento o la posición final:
+// se elige la lectura cuya distancia coincide con la que declara desplazamiento_mm.
+function applySuggestion(i, sug) {
+  const w = spec.waypoints[i];
+  if (!w || !Array.isArray(sug.offset) || sug.offset.length !== 3 || !sug.offset.every(v => isFinite(v))) {
+    msg("la sugerencia del servidor no trae una posición usable", "err");
+    return;
+  }
+  const s = sug.offset.map(Number);
+  const d = Number(sug.desplazamiento_mm);
+  const asDelta = Math.hypot(s[0], s[1], s[2]);
+  const asAbs = Math.hypot(s[0] - w.offset[0], s[1] - w.offset[1], s[2] - w.offset[2]);
+  const absolute = isFinite(d) ? Math.abs(asAbs - d) < Math.abs(asDelta - d) : asDelta > 400;
+  w.offset = absolute ? s.map(v => +v.toFixed(1)) : w.offset.map((v, k) => +(v + s[k]).toFixed(1));
+  ui.sel = [i];
+  camFromWaypoint(i);
+  syncInputs();
+  refresh();
+  msg("sugerencia aplicada, revalidando…");
+  runValidation().then(ok => {
+    refresh();
+    msg(ok ? "ruta válida" : validation.state === "error" ? validation.error : "sigue habiendo puntos inválidos",
+        ok ? "ok" : "err");
+  });
+}
+
+// ── Dibujo de la ruta y de la lista ───────────────────────────────────────────
+// Un mismo estado se pinta igual en el 3D, en la lista y en las vistas cartesianas.
+const MARK_COLOR = { ok: 0x69db7c, bad: 0xff6b6b, warn: 0xffa94d, unset: 0x8d97a8 };
+const CART_COLOR = { ok: "#69db7c", bad: "#ff6b6b", warn: "#ffa94d", unset: "#8d97a8" };
+const LIST_CLASS = { ok: "good", bad: "bad", warn: "warn", unset: "unset" };
+const MARK_GLYPH = { ok: "✓", bad: "✕", warn: "!", unset: "·" };
+const MARK_TITLE = {
+  ok: "el servidor lo dio por alcanzable en esta posición",
+  bad: "el servidor dice que no es alcanzable",
+  warn: "sin validar · la estimación de distancia lo deja fuera del alcance",
+  unset: "sin validar",
+};
+
+// La postura del brazo es la que el servidor calculó para la posición que validó: si el punto se ha
+// movido desde entonces, dibujarla sería enseñar un brazo que no corresponde a lo que hay en pantalla.
+function armLinks() {
+  const i = primaryIdx();
+  const c = i === null || isStale() ? null : checkOf(i);
+  return c && Array.isArray(c.eslabones) && c.eslabones.length > 1 ? c.eslabones : null;
+}
+function drawArm() {
+  clearGroup(armGroup);
+  const links = armLinks();
+  if (!links) return;
+  const pts = links.map(p => new THREE.Vector3(...p));
+  armGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), armLine));
+  pts.forEach(p => {
+    const s = new THREE.Mesh(new THREE.SphereGeometry(26, 10, 8), armJoint);
+    s.position.copy(p);
+    armGroup.add(s);
+  });
+}
+
+function refresh() {
+  ui.sel = ui.sel.filter(i => i >= 0 && i < spec.waypoints.length);
+  pruneSegments();
+
+  // Proporciones de una persona de pie: piernas hasta 0.47 de la altura, torso hasta 0.87, cabeza arriba
+  const H = spec.subject_height;
+  grid.position.z = -spec.robot.mount_z;              // el suelo baja: el origen es la base del brazo
+  reachBall.scale.setScalar(spec.robot.reach_mm);
+  person.position.set(spec.target[0], spec.target[1], -spec.robot.mount_z);
+  legs.scale.set(0.055 * H, 0.47 * H, 0.055 * H);
+  legs.position.z = 0.235 * H;
+  torso.scale.set(0.135 * H, 0.40 * H, 0.085 * H);    // hombros ~0.27 de la altura de ancho
+  torso.position.z = 0.67 * H;
+  head.scale.setScalar((1 - HEAD_FRAC) * H);
+  head.position.z = HEAD_FRAC * H;
+  targetDot.position.copy(target());
+
+  const world = densify().map(o => o.clone().add(target()));
+  pathLine.geometry.dispose();
+  pathLine.geometry = new THREE.BufferGeometry().setFromPoints(world.length > 1 ? world : []);
+
+  const stale = isStale();
+  const estado = spec.waypoints.map((w, i) => stateOf(i, stale));
+  const arcBad = troubles();
+  clearGroup(marks);
+  spec.waypoints.forEach((w, i) => {
+    const sel = ui.sel.includes(i);
+    const color = estado[i] === "bad" ? 0xff6b6b
+      : sel ? 0xffd43b
+      : MARK_COLOR[estado[i]];
+    const m = new THREE.Mesh(new THREE.SphereGeometry(sel ? 42 : 30, 14, 10),
+      new THREE.MeshBasicMaterial({ color }));
+    m.position.copy(new THREE.Vector3(...w.offset)).add(target());
+    marks.add(m);
+  });
+
+  const list = $("list"); list.innerHTML = "";
+  $("empty").style.display = spec.waypoints.length ? "none" : "block";
+  $("wpEdit").style.display = soloIdx() === null ? "none" : "block";
+  $("multiMove").style.display = ui.sel.length ? "block" : "none";
+  $("multiCount").textContent = `${ui.sel.length} punto(s) seleccionados.`;
+
+  spec.waypoints.forEach((w, i) => {
+    const c = checkOf(i);
+    const st = estado[i];
+    const row = document.createElement("div");
+    row.className = "wp" + (ui.sel.includes(i) ? " sel" : "") + " " + LIST_CLASS[st];
+    row.draggable = true;
+    row.tabIndex = 0;
+    row.onkeydown = e => { if (e.key === "Enter") { e.preventDefault(); selectWaypoint(i, e); } };
+    row.innerHTML = `<span class="grip">⠿</span><span class="n">${i + 1}</span>
+      <span class="st" title="${MARK_TITLE[st]}">${MARK_GLYPH[st]}</span>
+      <span class="pos">${w.offset.map(v => Math.round(v)).join(", ")} mm</span>`;
+    const del = document.createElement("button");
+    del.textContent = "✕";
+    del.title = `Borrar el punto ${i + 1}`;
+    del.onclick = e => { e.stopPropagation(); removeWaypoint(i); };
+    row.appendChild(del);
+    row.onclick = e => selectWaypoint(i, e);
+    row.addEventListener("dragstart", e => {
+      dragFrom = i; row.classList.add("dragging"); e.dataTransfer.effectAllowed = "move";
+    });
+    row.addEventListener("dragend", () => row.classList.remove("dragging"));
+    row.addEventListener("dragover", e => { e.preventDefault(); row.classList.add("over"); });
+    row.addEventListener("dragleave", () => row.classList.remove("over"));
+    row.addEventListener("drop", e => {
+      e.preventDefault(); row.classList.remove("over"); moveWaypoint(dragFrom, i);
+    });
+    list.appendChild(row);
+
+    if (st === "bad") {
+      const why = document.createElement("div");
+      why.className = "why";
+      why.textContent = [c.motivo, c.detalle].filter(Boolean).join(": ") || "punto inválido";
+      list.appendChild(why);
+      // La sugerencia es de la posición que se validó: tras mover el punto ya no vale.
+      if (!isStale() && c.sugerencia && Array.isArray(c.sugerencia.offset)) {
+        const s = document.createElement("div");
+        s.className = "sugg";
+        const d = Number(c.sugerencia.desplazamiento_mm);
+        const txt = document.createElement("span");
+        txt.textContent = isFinite(d) ? `mover ${Math.round(d)} mm y queda válido` : "hay una posición cercana válida";
+        const b = document.createElement("button");
+        b.textContent = "Aplicar";
+        b.onclick = e => { e.stopPropagation(); applySuggestion(i, c.sugerencia); };
+        s.append(txt, b);
+        list.appendChild(s);
+      }
+    } else if (st === "warn") {
+      const why = document.createElement("div");
+      why.className = "why warn";
+      why.textContent = `estimado: la brida necesita ${Math.round(flangeReach(w.offset))} mm y el brazo llega a ${spec.robot.reach_mm}`;
+      list.appendChild(why);
+    }
+
+    const next = spec.waypoints[i + 1];
+    if (!next) return;
+    const seg = segmentOf(w.id, next.id);
+    const editar = () => segmentBetween(w.id, next.id);
+    const div = document.createElement("div");
+    div.className = "seg";
+    div.innerHTML = `<span>↓ tramo</span>`;
+    const kind = document.createElement("select");
+    kind.innerHTML = `<option value="line">línea</option><option value="arc">arco</option>`;
+    kind.value = seg.type;
+    kind.title = `Tramo entre el punto ${i + 1} y el ${i + 2}`;
+    kind.onchange = () => {
+      const s = editar();
+      s.type = kind.value;
+      if (s.type === "arc" && !s.bulge_mm) s.bulge_mm = 100;
+      refresh();
+    };
+    div.appendChild(kind);
+    if (seg.type === "arc") {
+      const bulge = document.createElement("input");
+      bulge.type = "range"; bulge.min = -400; bulge.max = 400; bulge.step = 10; bulge.value = seg.bulge_mm;
+      bulge.title = "abombado del arco, mm";
+      bulge.oninput = () => { editar().bulge_mm = +bulge.value; refresh(); };
+      const n = document.createElement("input");
+      n.type = "number"; n.min = 1; n.max = 20; n.value = seg.samples;
+      n.title = "puntos intermedios";
+      n.onchange = () => { editar().samples = Math.max(1, +n.value); refresh(); };
+      const lbl = document.createElement("span");
+      lbl.textContent = `${seg.bulge_mm} mm`;
+      div.append(bulge, lbl, n);
+    }
+    list.appendChild(div);
+
+    if (arcBad.porTramo.get(i)) {
+      const why = document.createElement("div");
+      why.className = "why";
+      why.textContent = `${arcBad.porTramo.get(i)} punto(s) intermedios de este tramo no son alcanzables: baja el abombado o mueve los extremos`;
+      list.appendChild(why);
+    }
+  });
+
+  renderValidation();
+  drawArm();
+  drawPolar();
+  drawCart();
+}
+
+function drawPolar() {
+  const r = ui.cam.length();
+  const az = Math.atan2(ui.cam.y, ui.cam.x) * 180 / Math.PI;
+  const el = Math.asin(clamp(ui.cam.z / (r || 1), -1, 1)) * 180 / Math.PI;
+  $("polar").textContent = `Cámara a ${Math.round(r)} mm del objetivo · ${Math.round(az)}° alrededor · ${Math.round(el)}° de altura`;
+}
+
+// El objetivo se deriva: cabeza de la persona, menos el pedestal, más el ajuste de mira
+function retarget() {
+  spec.target[2] = +(HEAD_FRAC * spec.subject_height - spec.robot.mount_z + spec.aim_z_offset).toFixed(1);
+}
+const axisOf = k => soloIdx() === null ? 0 : spec.waypoints[soloIdx()].offset[k];
+function setAxis(k, v) {
+  const i = soloIdx();
+  if (i === null) return;
+  spec.waypoints[i].offset[k] = v;
+  ui.cam.setComponent(k, v);
+}
+function camFromWaypoint(i) {
+  ui.cam.set(...spec.waypoints[i].offset);
+}
+function markWaypoint() {
+  spec.waypoints.push({ id: nextId++, offset: ui.cam.toArray().map(v => +v.toFixed(1)) });
+  ui.sel = [spec.waypoints.length - 1];
+  syncInputs();
+  refresh();
+  msg(`punto ${spec.waypoints.length} marcado`, "ok");
+}
+// Los tramos se guardan por pareja de identificadores: al reordenar o borrar, los que ya no son
+// vecinos dejan de tener sentido y se descartan.
+function pruneSegments() {
+  const pairs = new Set(spec.waypoints.slice(0, -1)
+    .map((w, i) => `${w.id}>${spec.waypoints[i + 1].id}`));
+  spec.segments = spec.segments.filter(s => pairs.has(`${s.from}>${s.to}`));
+}
+function moveWaypoint(from, to) {
+  if (from === null || from === to) return;
+  const [moved] = spec.waypoints.splice(from, 1);
+  spec.waypoints.splice(to, 0, moved);
+  ui.sel = [to];
+  dragFrom = null;
+  refresh();
+  msg(`punto movido a la posición ${to + 1}`, "ok");
+}
+function removeWaypoint(i) {
+  const [gone] = spec.waypoints.splice(i, 1);
+  spec.segments = spec.segments.filter(s => s.from !== gone.id && s.to !== gone.id);
+  ui.sel = [];
+  refresh();
+}
+function removeSelected() {
+  if (!ui.sel.length) return;
+  const ids = ui.sel.map(i => spec.waypoints[i].id);
+  spec.waypoints = spec.waypoints.filter(w => !ids.includes(w.id));
+  spec.segments = spec.segments.filter(s => !ids.includes(s.from) && !ids.includes(s.to));
+  ui.sel = [];
+  refresh();
+  msg(`${ids.length} punto(s) borrados`, "ok");
+}
+function selectWaypoint(i, ev) {
+  if (ev && (ev.metaKey || ev.ctrlKey)) {
+    const at = ui.sel.indexOf(i);
+    if (at >= 0) ui.sel.splice(at, 1); else ui.sel.push(i);
+  } else if (ev && ev.shiftKey && ui.sel.length) {
+    const from = ui.sel[ui.sel.length - 1];
+    const [a, b] = from <= i ? [from, i] : [i, from];
+    ui.sel = [];
+    for (let k = a; k <= b; k++) ui.sel.push(k);
+    if (ui.sel[ui.sel.length - 1] !== i) ui.sel.reverse();
+  } else {
+    ui.sel = [i];
+  }
+  const p = primaryIdx();
+  if (p !== null) camFromWaypoint(p);
+  syncInputs();
+  refresh();
+}
+function nudgeSelection(axis, delta) {
+  if (!ui.sel.length) return;
+  ui.sel.forEach(i => {
+    const w = spec.waypoints[i];
+    w.offset[axis] = +(w.offset[axis] + delta).toFixed(1);
+  });
+  const p = primaryIdx();
+  if (p !== null) camFromWaypoint(p);
+  syncInputs();
+  refresh();
+  msg(`${ui.sel.length} punto(s) · ${"XYZ"[axis]} ${delta > 0 ? "+" : ""}${delta} mm`, "ok");
+}
+
+// ── Controles ─────────────────────────────────────────────────────────────────
+const sliders = {   // [aplicar, leer, unidad]
+  camx: [v => ui.cam.x = v, () => ui.cam.x, "mm"],
+  camy: [v => ui.cam.y = v, () => ui.cam.y, "mm"],
+  camz: [v => ui.cam.z = v, () => ui.cam.z, "mm"],
+  fov:  [v => spec.camera.fov_h_deg = v, () => spec.camera.fov_h_deg, "°"],
+  tx:   [v => spec.target[0] = v, () => spec.target[0], "mm"],
+  ty:   [v => spec.target[1] = v, () => spec.target[1], "mm"],
+  sh:   [v => { spec.subject_height = v; retarget(); }, () => spec.subject_height, "mm"],
+  mount:[v => { spec.robot.mount_z = v; retarget(); }, () => spec.robot.mount_z, "mm"],
+  aimz: [v => { spec.aim_z_offset = v; retarget(); }, () => spec.aim_z_offset, "mm"],
+  wx:   [v => setAxis(0, v), () => axisOf(0), "mm"],
+  wy:   [v => setAxis(1, v), () => axisOf(1), "mm"],
+  wz:   [v => setAxis(2, v), () => axisOf(2), "mm"],
+  speed:[v => spec.motion.speed = v, () => spec.motion.speed, "%"],
+  blend:[v => spec.motion.blend_mm = v, () => spec.motion.blend_mm, "mm"],
+  coff: [v => spec.camera.offset_mm = v, () => spec.camera.offset_mm, "mm"],
+  dur:  [v => ui.dur = v, () => ui.dur, "s"],
+};
+
+// Cada deslizador lleva al lado una casilla: se puede escribir el valor y dar Enter.
+// Escribir fuera de rango amplía el deslizador en vez de recortar el valor.
+const boxes = {};
+const applyOf = {};
+for (const [id, [set, , unit]] of Object.entries(sliders)) {
+  const range = $(id);
+  const box = document.createElement("input");
+  box.type = "number"; box.className = "val"; box.id = id + "V";
+  box.min = range.min; box.max = range.max; box.step = range.step;
+  const label = document.createElement("i"); label.className = "u"; label.textContent = unit;
+  $(id + "V").replaceWith(box, label);
+  boxes[id] = box;
+
+  const apply = (value, typed) => {
+    let v = Number(value);
+    if (!isFinite(v)) { box.value = range.value; return; }
+    if (typed) {
+      if (v > +range.max) range.max = box.max = v;
+      if (v < +range.min) range.min = box.min = v;
+    }
+    v = Math.min(+range.max, Math.max(+range.min, v));
+    range.value = v; box.value = +v.toFixed(1);
+    set(v); syncInputs(); refresh();
+  };
+  applyOf[id] = apply;
+  range.addEventListener("input", e => apply(+e.target.value, false));
+  box.addEventListener("change", () => apply(box.value, true));
+  box.addEventListener("keydown", e => {
+    if (e.key === "Enter") { apply(box.value, true); box.blur(); }
+  });
+}
+boxes.blend.title = "-1 = parar en cada punto, sin blending";
+
+function syncInputs() {
+  for (const [id, [, get]] of Object.entries(sliders)) {
+    const v = Number(get());
+    if (v > +$(id).max) { $(id).max = boxes[id].max = v; }
+    if (v < +$(id).min) { $(id).min = boxes[id].min = v; }
+    $(id).value = v; boxes[id].value = +v.toFixed(1);
+  }
+}
+
+document.querySelectorAll("[data-nudge]").forEach(b => {
+  b.onclick = () => applyOf[b.dataset.nudge](Number(sliders[b.dataset.nudge][1]()) + (+b.dataset.dir) * stepMm(), true);
+});
+document.querySelectorAll("[data-move]").forEach(b => {
+  b.onclick = () => nudgeSelection(+b.dataset.move, (+b.dataset.dir) * stepMm());
+});
+$("modes").querySelectorAll("[data-mode]").forEach(b => {
+  b.onclick = () => {
+    ui.mode = b.dataset.mode;
+    $("modes").querySelectorAll("[data-mode]").forEach(o => o.classList.toggle("on", o === b));
+    $("views").className = ui.mode === "3d" ? "only3d" : ui.mode === "cart" ? "onlycart" : "both";
+    resize();
+  };
+});
+["showPath", "showArm", "showReach"].forEach(id => { $(id).onchange = () => refresh(); });
+
+$("seed").addEventListener("change", e => {
+  const nums = e.target.value.trim().split(/[\s,]+/).filter(Boolean).map(Number);
+  spec.seed_joints = nums.length === 6 && nums.every(n => !isNaN(n)) ? nums : null;
+  msg(spec.seed_joints ? "semilla lista" : "la semilla necesita 6 números", spec.seed_joints ? "ok" : "err");
+});
+
+function drag(el, onMove) {
+  let last = null;
+  el.addEventListener("pointerdown", e => { last = e; el.setPointerCapture(e.pointerId); });
+  el.addEventListener("pointerup", () => last = null);
+  el.addEventListener("pointermove", e => {
+    if (!last) return;
+    onMove(e.clientX - last.clientX, e.clientY - last.clientY);
+    last = e;
+  });
+}
+drag($("lens"), (dx, dy) => {
+  const r = ui.cam.length() || 1;
+  const az = Math.atan2(ui.cam.y, ui.cam.x) * 180 / Math.PI - dx * 0.4;
+  const el = clamp(Math.asin(clamp(ui.cam.z / r, -1, 1)) * 180 / Math.PI + dy * 0.3, -85, 85);
+  ui.cam.copy(offsetFrom(r, az, el));
+  syncInputs(); drawPolar(); drawCart();
+});
+$("lens").addEventListener("wheel", e => {
+  e.preventDefault();
+  const r = ui.cam.length() || 1;
+  ui.cam.multiplyScalar(clamp(r * (1 + Math.sign(e.deltaY) * 0.06), 150, 3000) / r);
+  syncInputs(); drawPolar(); drawCart();
+}, { passive: false });
+drag(view3d, (dx, dy) => {
+  orbit.az -= dx * 0.4;
+  orbit.el = clamp(orbit.el + dy * 0.3, -85, 85);
+});
+view3d.addEventListener("wheel", e => {
+  e.preventDefault();
+  orbit.dist = clamp(orbit.dist * (1 + Math.sign(e.deltaY) * 0.08), 600, 12000);
+}, { passive: false });
+
+addEventListener("keydown", e => {
+  if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+  if (e.key === "g" || e.key === "G") markWaypoint();
+  if (e.key === " ") { e.preventDefault(); togglePlay(); }
+  if (e.key === "Backspace" || e.key === "Delete") removeSelected();
+});
+$("mark").onclick = markWaypoint;
+$("play").onclick = togglePlay;
+
+function togglePlay() {
+  if (densify().length < 2) { msg("marca al menos 2 puntos", "err"); return; }
+  ui.playing = !ui.playing; ui.t0 = performance.now();
+  $("play").textContent = ui.playing ? "⏸ Parar" : "▶ Reproducir";
+}
+
+// ── Vista cartesiana ──────────────────────────────────────────────────────────
+function niceStep(span) {
+  const raw = Math.max(1, span) / 6;
+  const pow = Math.pow(10, Math.floor(Math.log10(raw)));
+  const n = raw / pow;
+  return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * pow;
+}
+
+function cartScene() {
+  const t = spec.target;
+  const showPath = $("showPath").checked;
+  const stale = isStale();
+  const wps = spec.waypoints.map((w, i) => ({
+    p: w.offset.map((v, k) => v + t[k]),
+    n: i + 1,
+    sel: ui.sel.includes(i),
+    st: stateOf(i, stale),
+  }));
+  return {
+    target: t,
+    floorZ: -spec.robot.mount_z,
+    headZ: HEAD_FRAC * spec.subject_height - spec.robot.mount_z,
+    headR: (1 - HEAD_FRAC) * spec.subject_height,
+    shoulderR: 0.135 * spec.subject_height,
+    reach: $("showReach").checked ? spec.robot.reach_mm : 0,
+    wps: showPath ? wps : [],
+    path: showPath ? densify().map(o => [o.x + t[0], o.y + t[1], o.z + t[2]]) : [],
+    arm: $("showArm").checked ? armLinks() : null,
+    cam: [ui.cam.x + t[0], ui.cam.y + t[1], ui.cam.z + t[2]],
+  };
+}
+
+function drawPlane(canvas, S, ix, iy, title, uName, vName) {
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (!w || !h) return;
+  const dpr = devicePixelRatio || 1;
+  canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+  const g = canvas.getContext("2d");
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, w, h);
+
+  const pts = [[0, 0], [S.target[ix], S.target[iy]], S.cam && [S.cam[ix], S.cam[iy]]].filter(Boolean);
+  S.wps.forEach(o => pts.push([o.p[ix], o.p[iy]]));
+  if (S.arm) S.arm.forEach(p => pts.push([p[ix], p[iy]]));
+  if (iy === 2) pts.push([S.target[0], S.floorZ], [S.target[0], S.headZ + S.headR], [0, S.floorZ]);
+  else pts.push([S.target[0] + S.shoulderR, S.target[1] + S.shoulderR],
+                [S.target[0] - S.shoulderR, S.target[1] - S.shoulderR]);
+  if (S.reach) pts.push([-S.reach, -S.reach], [S.reach, S.reach]);
+
+  const us = pts.map(p => p[0]), vs = pts.map(p => p[1]);
+  const pad = 120;
+  const minU = Math.min(...us) - pad, maxU = Math.max(...us) + pad;
+  const minV = Math.min(...vs) - pad, maxV = Math.max(...vs) + pad;
+  const mL = 44, mR = 10, mT = 18, mB = 20;
+  const pw = Math.max(10, w - mL - mR), ph = Math.max(10, h - mT - mB);
+  const scale = Math.min(pw / Math.max(1, maxU - minU), ph / Math.max(1, maxV - minV));
+  const cu = (minU + maxU) / 2, cv = (minV + maxV) / 2;
+  const X = u => mL + pw / 2 + (u - cu) * scale;
+  const Y = v => mT + ph / 2 - (v - cv) * scale;
+  const u0 = cu - pw / (2 * scale), u1 = cu + pw / (2 * scale);
+  const v0 = cv - ph / (2 * scale), v1 = cv + ph / (2 * scale);
+
+  g.font = "10px -apple-system, system-ui, sans-serif";
+  g.textBaseline = "middle";
+  const step = niceStep(Math.max(u1 - u0, v1 - v0));
+  if (!isFinite(step) || step <= 0 || !isFinite(scale)) return;
+  g.lineWidth = 1;
+  for (let u = Math.ceil(u0 / step) * step; u <= u1; u += step) {
+    g.strokeStyle = Math.abs(u) < 1e-6 ? "#4a5261" : "#232831";
+    g.beginPath(); g.moveTo(X(u), mT); g.lineTo(X(u), mT + ph); g.stroke();
+    g.fillStyle = "#6b7484"; g.textAlign = "center";
+    g.fillText(String(Math.round(u)), X(u), mT + ph + 9);
+  }
+  for (let v = Math.ceil(v0 / step) * step; v <= v1; v += step) {
+    g.strokeStyle = Math.abs(v) < 1e-6 ? "#4a5261" : "#232831";
+    g.beginPath(); g.moveTo(mL, Y(v)); g.lineTo(mL + pw, Y(v)); g.stroke();
+    g.fillStyle = "#6b7484"; g.textAlign = "right";
+    g.fillText(String(Math.round(v)), mL - 4, Y(v));
+  }
+
+  const circle = (u, v, r, stroke, dash) => {
+    g.save(); g.setLineDash(dash || []); g.strokeStyle = stroke;
+    g.beginPath(); g.arc(X(u), Y(v), Math.max(1, r * scale), 0, Math.PI * 2); g.stroke(); g.restore();
+  };
+  const dot = (u, v, r, fill) => { g.fillStyle = fill; g.beginPath(); g.arc(X(u), Y(v), r, 0, Math.PI * 2); g.fill(); };
+
+  if (S.reach) circle(0, 0, S.reach, "#3c4b60", [4, 4]);
+
+  if (iy === 2) {
+    g.strokeStyle = "#39414f"; g.lineWidth = 1;
+    g.beginPath(); g.moveTo(mL, Y(S.floorZ)); g.lineTo(mL + pw, Y(S.floorZ)); g.stroke();
+    g.strokeStyle = "#5a6475"; g.lineWidth = 3;
+    g.beginPath(); g.moveTo(X(0), Y(S.floorZ)); g.lineTo(X(0), Y(0)); g.stroke();   // pedestal
+    g.strokeStyle = "#6d8bb5"; g.lineWidth = 2;
+    g.beginPath(); g.moveTo(X(S.target[0]), Y(S.floorZ)); g.lineTo(X(S.target[0]), Y(S.headZ)); g.stroke();
+    circle(S.target[0], S.headZ, S.headR, "#6d8bb5");
+  } else {
+    circle(S.target[0], S.target[1], S.shoulderR, "#41526b");
+    circle(S.target[0], S.target[1], S.headR, "#6d8bb5");
+  }
+  g.lineWidth = 1;
+  g.fillStyle = "#8d97a8"; g.textAlign = "left";
+  g.fillText("base", X(0) + 6, Y(0) - 8);
+  dot(0, 0, 4, "#8d97a8");
+
+  if (S.cam) {
+    g.save(); g.setLineDash([3, 3]); g.strokeStyle = "#6b5a33";
+    g.beginPath(); g.moveTo(X(S.cam[ix]), Y(S.cam[iy])); g.lineTo(X(S.target[ix]), Y(S.target[iy])); g.stroke();
+    g.restore();
+    g.strokeStyle = "#f08c00";
+    g.beginPath(); g.arc(X(S.cam[ix]), Y(S.cam[iy]), 5, 0, Math.PI * 2); g.stroke();
+  }
+  dot(S.target[ix], S.target[iy], 4, "#f08c00");
+
+  if (S.path.length > 1) {
+    g.strokeStyle = "#f08c00"; g.beginPath();
+    S.path.forEach((p, i) => i ? g.lineTo(X(p[ix]), Y(p[iy])) : g.moveTo(X(p[ix]), Y(p[iy])));
+    g.stroke();
+  }
+  S.wps.forEach(o => {
+    const color = o.st === "bad" ? CART_COLOR.bad : o.sel ? "#ffd43b" : CART_COLOR[o.st];
+    dot(o.p[ix], o.p[iy], o.sel ? 6 : 4, color);
+    g.fillStyle = "#c7cdd8"; g.textAlign = "left";
+    g.fillText(String(o.n), X(o.p[ix]) + 7, Y(o.p[iy]) - 7);
+  });
+
+  if (S.arm) {
+    g.strokeStyle = "#9ad0ff"; g.lineWidth = 2;
+    g.beginPath();
+    S.arm.forEach((p, i) => i ? g.lineTo(X(p[ix]), Y(p[iy])) : g.moveTo(X(p[ix]), Y(p[iy])));
+    g.stroke();
+    g.lineWidth = 1;
+    S.arm.forEach(p => dot(p[ix], p[iy], 3, "#74c0fc"));
+  }
+
+  g.fillStyle = "#8d97a8"; g.textAlign = "left";
+  g.fillText(`${title} · ${uName} → · ${vName} ↑ · mm`, mL, 9);
+}
+
+function drawCart() {
+  if (ui.mode === "3d") return;
+  const S = cartScene();
+  drawPlane($("cartFront"), S, 0, 2, "Alzado", "X", "Z");
+  drawPlane($("cartTop"), S, 0, 1, "Planta", "X", "Y");
+}
+
+// ── Guardar, validar, generar y cargar ────────────────────────────────────────
+const VALID_NAME = /^[A-Za-z0-9_-]{1,64}$/;
+function routeName() {
+  const name = $("name").value.trim();
+  if (!VALID_NAME.test(name)) {
+    msg("nombre inválido: solo letras, números, guion y guion bajo", "err");
+    return null;
+  }
+  spec.name = name;
+  return name;
+}
+
+$("save").onclick = async () => {
+  const name = routeName();
+  if (!name) return;
+  const r = await postJSON(`/api/routes/${name}`, spec);
+  msg(r.ok ? (r.data && r.data.mensaje) || "guardada" : r.error, r.ok ? "ok" : "err");
+  if (r.ok) loadRoutes();
+};
+
+$("validate").onclick = async () => {
+  if (!routeName()) return;
+  const ok = await runValidation();
+  refresh();
+  if (validation.state === "error") { msg(`no se pudo validar: ${validation.error}`, "err"); return; }
+  msg(validation.data.resumen || (ok ? "ruta válida" : "hay puntos inválidos"), ok ? "ok" : "err");
+};
+
+// Generar valida primero: un Lua de una ruta inalcanzable es un fallo delante del invitado.
+$("generate").onclick = async () => {
+  const name = routeName();
+  if (!name) return;
+  msg("validando…");
+  const ok = await runValidation();
+  refresh();
+  if (!ok) {
+    msg(validation.state === "error"
+      ? `no se generó: no se pudo validar (${validation.error})`
+      : `no se generó: ${(validation.data && validation.data.resumen) || "hay puntos inválidos"}`, "err");
+    return;
+  }
+  const enviado = geomStamp();
+  const saved = await postJSON(`/api/routes/${name}`, spec);
+  if (!saved.ok) { msg(saved.error, "err"); return; }
+  const gen = await postJSON(`/api/generate/${name}`, spec);
+  if (!gen.ok) {
+    // El servidor revalida y responde con el informe: se adopta, o la pantalla se quedaría en verde.
+    if (gen.data && Array.isArray(gen.data.puntos)) {
+      validation.state = "done"; validation.data = gen.data; validation.stamp = enviado;
+    } else {
+      validation.state = "none"; validation.data = null;
+    }
+    refresh();
+    msg(gen.error, "err");
+    return;
+  }
+  generated.name = name;
+  generated.stamp = enviado;
+  const aviso = (robotNotice() || {}).aviso;
+  msg([(gen.data && gen.data.mensaje) || "Lua generado", aviso].filter(Boolean).join(" · "),
+      aviso ? "err" : "ok");
+  loadRoutes();
+};
+
+// Sube el .lua que hay en el servidor, no lo que se ve: si no son lo mismo hay que decirlo.
+$("upload").onclick = async () => {
+  const name = routeName();
+  if (!name) return;
+  msg("cargando al FAIRINO…");
+  const enviado = geomStamp();
+  const r = await postJSON(`/api/upload/${name}`, {});
+  if (!r.ok) { msg(r.error, "err"); return; }
+  const mismo = generated.name === name && generated.stamp === enviado;
+  const texto = (r.data && (r.data.mensaje || r.data.resumen)) || "cargado";
+  msg(mismo ? texto : `${texto} · ojo: ese .lua no es la ruta que tienes en pantalla, genérala de nuevo`,
+      mismo ? "ok" : "err");
+};
+
+async function loadRoutes() {
+  const box = $("routeList");
+  let names;
+  try {
+    const res = await fetch("/api/routes");
+    names = await res.json();
+  } catch (e) {
+    box.innerHTML = "";
+    const p = document.createElement("p");
+    p.className = "hint";
+    p.textContent = `no se pudo leer la lista de rutas (${e.message})`;
+    box.appendChild(p);
+    return;
+  }
+  box.innerHTML = "";
+  (Array.isArray(names) ? names : []).forEach(entry => {
+    const name = typeof entry === "string" ? entry : entry.name;
+    const row = document.createElement("div");
+    row.className = "rt" + (name === spec.name ? " cur" : "");
+    row.textContent = name;
+    row.onclick = () => loadRoute(name);
+    box.appendChild(row);
+  });
+  if (!box.children.length) {
+    const p = document.createElement("p");
+    p.className = "hint";
+    p.textContent = "todavía no hay rutas guardadas.";
+    box.appendChild(p);
+  }
+}
+$("reloadRoutes").onclick = loadRoutes;
+
+// Dos puntos con el mismo id compartirían el veredicto del informe y uno saldría verde sin que nadie
+// haya validado su posición; sin id no hay veredicto posible. Se renumeran al cargar.
+function normalizeIds() {
+  const usados = new Set();
+  const huerfanos = [];
+  spec.waypoints.forEach(w => {
+    const id = Number(w.id);
+    if (!Number.isFinite(id) || usados.has(id)) huerfanos.push(w);
+    else { w.id = id; usados.add(id); }
+  });
+  let libre = usados.size ? Math.max(...usados) + 1 : 1;
+  huerfanos.forEach(w => { w.id = libre++; usados.add(w.id); });
+  nextId = usados.size ? Math.max(...usados) + 1 : 1;
+  return huerfanos.length;
+}
+
+async function loadRoute(name) {
+  let data;
+  try {
+    const res = await fetch(`/api/routes/${name}`);
+    data = await res.json();
+    if (!res.ok) { msg((data && data.error) || `HTTP ${res.status}`, "err"); return; }
+  } catch (e) {
+    msg(`no se pudo abrir ${name} (${e.message})`, "err");
+    return;
+  }
+  if (!data || typeof data !== "object" || !Array.isArray(data.waypoints)
+      || !Array.isArray(data.target) || data.target.length !== 3) {
+    msg(`${name} no parece una ruta del simulador: no se ha cargado`, "err");
+    return;
+  }
+  Object.assign(spec, data);
+  // Explícito y no `spec.robot || …`: sin esto una ruta que no declara robot se quedaría con el
+  // pedestal y el alcance de la que estuviera abierta antes.
+  spec.robot = { mount_z: 0, reach_mm: 1400, ...(data.robot || {}) };
+  spec.camera = { fov_h_deg: 55, offset_mm: 100, ...(data.camera || {}) };
+  spec.motion = { speed: 20, acc: 50, blend_mm: 10, camera_timeout_s: 30, ...(data.motion || {}) };
+  spec.aim_z_offset = Number(data.aim_z_offset) || 0;
+  spec.segments = Array.isArray(data.segments) ? data.segments : [];
+  spec.target = data.target.map(Number);
+  const renumerados = normalizeIds();
+  // la persona se ajusta al objetivo guardado, contando el pedestal
+  spec.subject_height = Math.round((spec.target[2] + spec.robot.mount_z - spec.aim_z_offset) / HEAD_FRAC);
+  ui.sel = [];
+  validation.state = "none"; validation.data = null; validation.error = "";
+  generated.name = ""; generated.stamp = "";
+  $("name").value = spec.name;
+  $("seed").value = (spec.seed_joints || []).join(" ");
+  if (spec.waypoints.length) camFromWaypoint(0);
+  syncInputs(); refresh(); loadRoutes();
+  msg(renumerados ? `cargada ${spec.name} · ${renumerados} punto(s) sin id único, renumerados`
+                  : `cargada ${spec.name}`, renumerados ? "err" : "ok");
+}
+
+// ── Bucle de render ───────────────────────────────────────────────────────────
+// Las ayudas de trabajo solo van en la vista 3D: la del lente tiene que mostrar la toma tal cual.
+function setAids(on) {
+  shotHelper.visible = on;
+  axes.visible = on;
+  targetDot.visible = on;
+  const path = on && $("showPath").checked;
+  pathLine.visible = path;
+  marks.visible = path;
+  armGroup.visible = on && $("showArm").checked;
+  reachBall.visible = on && $("showReach").checked;
+}
+
+function resize() {
+  const w = view3d.clientWidth, h = view3d.clientHeight;
+  if (w > 0 && h > 0) {
+    rView.setSize(w, h); rView.setPixelRatio(devicePixelRatio);
+    viewCam.aspect = w / h; viewCam.updateProjectionMatrix();
+  }
+  rLens.setSize(276, 490); rLens.setPixelRatio(devicePixelRatio);
+  drawCart();
+}
+addEventListener("resize", resize);
+
+function tick() {
+  requestAnimationFrame(tick);
+  if (ui.playing) {
+    const path = densify();
+    const total = (performance.now() - ui.t0) / 1000 / ui.dur;
+    if (total >= 1) { ui.playing = false; $("play").textContent = "▶ Reproducir"; }
+    else {
+      const f = total * (path.length - 1), i = Math.floor(f);
+      ui.cam.copy(path[i]).lerp(path[Math.min(i + 1, path.length - 1)], f - i);
+      syncInputs(); drawPolar(); drawCart();
+    }
+  }
+  placeShotCam();
+  viewCam.position.copy(target()).add(offsetFrom(orbit.dist, orbit.az, orbit.el));
+  viewCam.lookAt(target());
+  setAids(true);
+  if (ui.mode !== "cart") rView.render(scene, viewCam);
+  setAids(false);
+  rLens.render(scene, shotCam);
+}
+
+syncInputs(); refresh(); resize(); loadRoutes(); tick();
+msg("mueve la cámara por ejes y pulsa G para marcar puntos");
+</script>
+</body>
+</html>
