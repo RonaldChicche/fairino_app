@@ -1,0 +1,20 @@
+%% Estados de una toma (D37, A1). El estado solo avanza.
+stateDiagram-v2
+    [*] --> requested
+    requested --> camera_starting
+    camera_starting --> recording_confirmed: la GoPro reporta que graba (regla 2)
+    recording_confirmed --> moving: el robot ejecuta la primitiva (D2)
+    moving --> finishing
+    finishing --> rendering: la cámara se detiene
+    rendering --> done
+    requested --> aborted: el operador cancela
+    camera_starting --> aborted
+    recording_confirmed --> aborted
+    camera_starting --> failed: sin confirmación a tiempo
+    recording_confirmed --> failed
+    moving --> failed: error del robot, sin reintento
+    finishing --> failed
+    rendering --> failed
+    done --> [*]
+    failed --> [*]
+    aborted --> [*]

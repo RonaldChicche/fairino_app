@@ -35,6 +35,6 @@ Las carpetas vacías llevan `.gitkeep` solo para que git las conserve.
 |---|---|---|---|
 | `artifacts/arquitectura-glambot/` | Creado | Canvas con cuatro páginas: arquitectura, entrega de videos, pantallas de la app y datos. Fuentes de los tableros y los scripts que los generan | D1–D34 |
 | `architecture.excalidraw` | Superado | Vista anterior de la arquitectura. La reemplaza el artifact (D29); se borra | D1–D25 |
-| `session-state-machine.mmd` | Planificado | Secuencia y estados de una toma, incluidos los fallos a mitad de camino | A1 |
+| `session-state-machine.mmd` | Creado | Secuencia y estados de una toma, incluidos los fallos a mitad de camino | A1, D37 |
 | `event-network.mmd` | Planificado | Red del evento: wifi del edge, tablet del operador, celular del invitado, router 4G/5G | D15, D24, E1 |
 | `upload-and-delivery.mmd` | Planificado | Cola de subida, envío del correo y cambio entre modo nube y modo local | C3, D21, G3 |

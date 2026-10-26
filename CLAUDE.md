@@ -36,7 +36,7 @@ Las decisiones del proyecto viven en Notion, no en este repositorio:
 | `web/` | Astro en Vercel (D27) en `glam.datzoncompany.com`: página del invitado, panel de administración, API de sesiones, envío de correos y limpieza diaria, sobre Supabase (D28) | Camino crítico del evento, interfaz del operador, realtime (D14) |
 | `docs/` | Diagramas Mermaid de lo decidido y los artifacts versionados (D29). `architecture.excalidraw` está superado por el artifact | Decisiones (viven en Notion) |
 
-Hoy no hay código de producción: `edge/` y `web/` son estructura vacía, y `edge/tools/` guarda las herramientas de planificación. El detalle de cada carpeta está en `README.md`, el único README del repo, a propósito: cuando una carpeta gane contenido, actualiza esa tabla en lugar de crear un README nuevo. Mantén este mapa y esa tabla en sincronía.
+Hoy el único código de producción es el núcleo de `edge/src/edge/session/` con sus falsos; `web/` es solo el esqueleto de Astro, y `edge/tools/` guarda las herramientas de planificación. El detalle de cada carpeta está en `README.md`, el único README del repo, a propósito: cuando una carpeta gane contenido, actualiza esa tabla en lugar de crear un README nuevo. Mantén este mapa y esa tabla en sincronía.
 
 ## 4. Reglas duras
 
@@ -63,7 +63,7 @@ No son negociables. Si una tarea exige romper alguna, detente y plantéalo (secc
 7. **El software no es la seguridad.** No escribas código que asuma ser la protección de las personas, ni desactives o esquives la parada del controlador por pérdida de comunicación.
    *Motivo:* la seguridad la dan el paro de emergencia cableado y la parada automática del controlador; el watchdog del SDK no es seguridad certificada. (D10; E2 en Notion)
 
-8. **El edge elige primitivas, no genera movimiento.** `edge/` solo selecciona una primitiva Lua ya cargada en el controlador y sus parámetros; no envía trayectorias ni poses propias.
+8. **El edge elige primitivas, no genera movimiento.** `edge/` solo selecciona una primitiva Lua ya cargada en el controlador y sus parámetros; no envía trayectorias ni poses propias. Única excepción (D38): en modo Studio, con el operador presente, el edge puede mandar movimientos sueltos; nunca durante una toma ni desde el camino crítico, y el control del Studio y el candado de la toma se excluyen.
    *Motivo:* el robot valida sus propios límites antes de moverse. (D2)
 
 ## 5. Convenciones
