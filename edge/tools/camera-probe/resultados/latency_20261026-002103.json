@@ -1,0 +1,169 @@
+{
+  "started": "2026-10-26T00:19:59",
+  "mode": "latency",
+  "info": {
+    "battery_pct": 100,
+    "sd_remaining_kb": 121904640,
+    "usb_controlled": 1,
+    "settings": {
+      "video_resolution": 1,
+      "frames_per_second": 1,
+      "video_lens": 4,
+      "hypersmooth": 3,
+      "video_bit_rate": null,
+      "anti_flicker": 2,
+      "video_performance_mode": 0
+    }
+  },
+  "fixed_applied": {
+    "video_bit_rate": false,
+    "hypersmooth": true
+  },
+  "latency_summary_ms": {
+    "min": 389.8,
+    "median": 417.75,
+    "max": 478.6,
+    "n": 10
+  },
+  "rows": [
+    {
+      "start_ack_ms": 364.8,
+      "start_ok": true,
+      "start_to_encoding_ms": 404.4,
+      "stop_to_idle_ms": 521.2,
+      "file": "100GOPRO/GX010396.MP4",
+      "width": 3840,
+      "height": 2160,
+      "duration_s": 3,
+      "frame_rate": 119.88,
+      "size_mb": 39.5,
+      "mbps": 105.4
+    },
+    {
+      "start_ack_ms": 359.3,
+      "start_ok": true,
+      "start_to_encoding_ms": 417.2,
+      "stop_to_idle_ms": 515.3,
+      "file": "100GOPRO/GX010397.MP4",
+      "width": 3840,
+      "height": 2160,
+      "duration_s": 3,
+      "frame_rate": 119.88,
+      "size_mb": 39.9,
+      "mbps": 106.3
+    },
+    {
+      "start_ack_ms": 433.7,
+      "start_ok": true,
+      "start_to_encoding_ms": 478.6,
+      "stop_to_idle_ms": 513.5,
+      "file": "100GOPRO/GX010398.MP4",
+      "width": 3840,
+      "height": 2160,
+      "duration_s": 3,
+      "frame_rate": 119.88,
+      "size_mb": 38.7,
+      "mbps": 103.1
+    },
+    {
+      "start_ack_ms": 342.2,
+      "start_ok": true,
+      "start_to_encoding_ms": 389.8,
+      "stop_to_idle_ms": 650.4,
+      "file": "100GOPRO/GX010399.MP4",
+      "width": 3840,
+      "height": 2160,
+      "duration_s": 3,
+      "frame_rate": 119.88,
+      "size_mb": 38.0,
+      "mbps": 101.3
+    },
+    {
+      "start_ack_ms": 353.4,
+      "start_ok": true,
+      "start_to_encoding_ms": 408.2,
+      "stop_to_idle_ms": 511.1,
+      "file": "100GOPRO/GX010400.MP4",
+      "width": 3840,
+      "height": 2160,
+      "duration_s": 3,
+      "frame_rate": 119.88,
+      "size_mb": 39.0,
+      "mbps": 103.9
+    },
+    {
+      "start_ack_ms": 350.2,
+      "start_ok": true,
+      "start_to_encoding_ms": 399.7,
+      "stop_to_idle_ms": 521.0,
+      "file": "100GOPRO/GX010401.MP4",
+      "width": 3840,
+      "height": 2160,
+      "duration_s": 3,
+      "frame_rate": 119.88,
+      "size_mb": 38.8,
+      "mbps": 103.5
+    },
+    {
+      "start_ack_ms": 375.0,
+      "start_ok": true,
+      "start_to_encoding_ms": 418.3,
+      "stop_to_idle_ms": 500.3,
+      "file": "100GOPRO/GX010402.MP4",
+      "width": 3840,
+      "height": 2160,
+      "duration_s": 3,
+      "frame_rate": 119.88,
+      "size_mb": 38.3,
+      "mbps": 102.1
+    },
+    {
+      "start_ack_ms": 383.7,
+      "start_ok": true,
+      "start_to_encoding_ms": 430.5,
+      "stop_to_idle_ms": 515.8,
+      "file": "100GOPRO/GX010403.MP4",
+      "width": 3840,
+      "height": 2160,
+      "duration_s": 3,
+      "frame_rate": 119.88,
+      "size_mb": 38.6,
+      "mbps": 102.9
+    },
+    {
+      "start_ack_ms": 372.9,
+      "start_ok": true,
+      "start_to_encoding_ms": 428.5,
+      "stop_to_idle_ms": 540.1,
+      "file": "100GOPRO/GX010404.MP4",
+      "width": 3840,
+      "height": 2160,
+      "duration_s": 3,
+      "frame_rate": 119.88,
+      "size_mb": 38.6,
+      "mbps": 103.1
+    },
+    {
+      "start_ack_ms": 399.3,
+      "start_ok": true,
+      "start_to_encoding_ms": 442.9,
+      "stop_to_idle_ms": 523.7,
+      "file": "100GOPRO/GX010405.MP4",
+      "width": 3840,
+      "height": 2160,
+      "duration_s": 3,
+      "frame_rate": 119.88,
+      "size_mb": 38.6,
+      "mbps": 103.0
+    }
+  ],
+  "restored": {
+    "video_resolution": 1,
+    "frames_per_second": 1,
+    "video_lens": 4,
+    "hypersmooth": 3,
+    "video_bit_rate": null,
+    "anti_flicker": 2,
+    "video_performance_mode": 0
+  }
+}

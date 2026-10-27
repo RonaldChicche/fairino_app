@@ -4,6 +4,7 @@ import json
 import socket
 import statistics
 import time
+import urllib.request
 from datetime import datetime
 from pathlib import Path
 
@@ -33,6 +34,14 @@ TRACKED = [
     ("anti_flicker", SID.ANTI_FLICKER),
     ("video_performance_mode", SID.VIDEO_PERFORMANCE_MODE),
 ]
+
+
+CAMERA_IP = None
+
+
+def http_json(path):
+    with urllib.request.urlopen(f"http://{CAMERA_IP}:8080{path}", timeout=10) as r:
+        return json.load(r)
 
 
 async def state(gopro):
@@ -83,18 +92,25 @@ async def record_once(gopro, hold=HOLD_S, preview=False):
     await gopro.http_command.set_shutter(shutter=TOGGLE.DISABLE)
     idle = await wait_for(gopro, lambda d: not d.get(ST.ENCODING) and not d.get(ST.BUSY))
     row["stop_to_idle_ms"] = None if idle is None else round((time.perf_counter() - t1) * 1000, 1)
-    last = (await gopro.http_command.get_last_captured_media()).data
-    path = f"{last.folder}/{last.file}"
-    meta = (await gopro.http_command.get_media_metadata(path=path)).data
-    row.update(
-        file=path,
-        width=meta.width,
-        height=meta.height,
-        duration_s=meta.duration,
-        frame_rate=meta.frame_rate,
-        size_mb=round(meta.file_size / 1e6, 1),
-        mbps=round(meta.file_size * 8 / 1e6 / max(meta.duration, 0.1), 1),
-    )
+    # La HERO10 no soporta last_captured: se lee el último archivo de media/list.
+    try:
+        media = (await asyncio.to_thread(http_json, "/gopro/media/list"))["media"][-1]
+        name = media["fs"][-1]["n"]
+        path = f"{media['d']}/{name}"
+        meta = await asyncio.to_thread(http_json, f"/gopro/media/info?path={path}")
+        fps = int(meta["fps"]) / int(meta["fps_denom"])
+        size = int(meta["s"])
+        row.update(
+            file=path,
+            width=int(meta["w"]),
+            height=int(meta["h"]),
+            duration_s=int(meta["dur"]),
+            frame_rate=round(fps, 2),
+            size_mb=round(size / 1e6, 1),
+            mbps=round(size * 8 / 1e6 / max(int(meta["dur"]), 1), 1),
+        )
+    except Exception as exc:
+        row["media_error"] = repr(exc)
     return row
 
 
@@ -131,11 +147,6 @@ async def info(gopro):
         "usb_controlled": data.get(ST.USB_CONTROLLED),
         "settings": await snapshot(gopro),
     }
-    try:
-        cam = (await gopro.http_command.get_camera_info()).data
-        out["camera_info"] = json.loads(cam.model_dump_json()) if hasattr(cam, "model_dump_json") else str(cam)
-    except Exception as exc:
-        out["camera_info_error"] = repr(exc)
     return out
 
 
@@ -157,7 +168,10 @@ async def discover_modes(gopro, lens):
 async def run(args):
     RESULTS.mkdir(exist_ok=True)
     report = {"started": datetime.now().isoformat(timespec="seconds"), "mode": args.mode}
-    gopro = WiredGoPro()
+    global CAMERA_IP
+    if args.serial:
+        CAMERA_IP = f"172.2{args.serial[0]}.1{args.serial[1:]}.51"
+    gopro = WiredGoPro(serial=args.serial)
     await gopro.open()
     original = None
     try:
@@ -168,8 +182,8 @@ async def run(args):
         if args.mode == "info":
             return report
 
-        for name, value, _ in FIXED:
-            await apply(gopro, name, value)
+        report["fixed_applied"] = {name: await apply(gopro, name, value) for name, value, _ in FIXED}
+        print("ajustes fijos aplicados:", report["fixed_applied"])
 
         if args.mode == "latency":
             await apply(gopro, "video_resolution", S.VideoResolution.NUM_4K)
@@ -250,6 +264,7 @@ async def run(args):
 def main():
     parser = argparse.ArgumentParser(description="Mide la HERO10 por USB: info, latencia de arranque, modos, lentes y vista previa.")
     parser.add_argument("mode", choices=["info", "latency", "matrix", "lens", "preview"])
+    parser.add_argument("--serial", default=None, help="últimos 3 dígitos del serial; evita el mDNS, que en macOS no encuentra la cámara")
     parser.add_argument("--repeat", type=int, default=10)
     parser.add_argument("--cooldown", type=float, default=4.0)
     parser.add_argument("--preview", action="store_true", help="en latency, prueba la vista previa mientras graba")

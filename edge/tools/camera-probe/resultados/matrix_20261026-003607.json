@@ -1,0 +1,453 @@
+{
+  "started": "2026-10-26T00:32:47",
+  "mode": "matrix",
+  "info": {
+    "battery_pct": 100,
+    "sd_remaining_kb": 122482048,
+    "usb_controlled": 1,
+    "settings": {
+      "video_resolution": 1,
+      "frames_per_second": 1,
+      "video_lens": 4,
+      "hypersmooth": 3,
+      "video_bit_rate": null,
+      "anti_flicker": 2,
+      "video_performance_mode": 0
+    }
+  },
+  "fixed_applied": {
+    "video_bit_rate": false,
+    "hypersmooth": true
+  },
+  "valid_modes": [
+    [
+      "NUM_4K",
+      "NUM_120_0"
+    ],
+    [
+      "NUM_4K",
+      "NUM_60_0"
+    ],
+    [
+      "NUM_4K",
+      "NUM_30_0"
+    ],
+    [
+      "NUM_4K",
+      "NUM_24_0"
+    ],
+    [
+      "NUM_2_7K",
+      "NUM_240_0"
+    ],
+    [
+      "NUM_2_7K",
+      "NUM_120_0"
+    ],
+    [
+      "NUM_2_7K",
+      "NUM_60_0"
+    ],
+    [
+      "NUM_2_7K_4_3",
+      "NUM_120_0"
+    ],
+    [
+      "NUM_2_7K_4_3",
+      "NUM_60_0"
+    ],
+    [
+      "NUM_1080",
+      "NUM_240_0"
+    ],
+    [
+      "NUM_1080",
+      "NUM_120_0"
+    ],
+    [
+      "NUM_1080",
+      "NUM_60_0"
+    ],
+    [
+      "NUM_1080",
+      "NUM_30_0"
+    ],
+    [
+      "NUM_1080",
+      "NUM_24_0"
+    ],
+    [
+      "NUM_4K_4_3",
+      "NUM_60_0"
+    ],
+    [
+      "NUM_4K_4_3",
+      "NUM_30_0"
+    ],
+    [
+      "NUM_4K_4_3",
+      "NUM_24_0"
+    ],
+    [
+      "NUM_5K_4_3",
+      "NUM_30_0"
+    ],
+    [
+      "NUM_5K_4_3",
+      "NUM_24_0"
+    ],
+    [
+      "NUM_5_3K",
+      "NUM_60_0"
+    ],
+    [
+      "NUM_5_3K",
+      "NUM_30_0"
+    ],
+    [
+      "NUM_5_3K",
+      "NUM_24_0"
+    ]
+  ],
+  "rows": [
+    {
+      "resolution": "NUM_4K",
+      "fps": "NUM_120_0",
+      "start_ack_ms": 366.8,
+      "start_ok": true,
+      "start_to_encoding_ms": 424.9,
+      "stop_to_idle_ms": 505.2,
+      "file": "100GOPRO/GX010406.MP4",
+      "width": 3840,
+      "height": 2160,
+      "duration_s": 3,
+      "frame_rate": 119.88,
+      "size_mb": 38.9,
+      "mbps": 103.6
+    },
+    {
+      "resolution": "NUM_4K",
+      "fps": "NUM_60_0",
+      "start_ack_ms": 376.5,
+      "start_ok": true,
+      "start_to_encoding_ms": 423.0,
+      "stop_to_idle_ms": 536.1,
+      "file": "100GOPRO/GX010407.MP4",
+      "width": 3840,
+      "height": 2160,
+      "duration_s": 3,
+      "frame_rate": 59.94,
+      "size_mb": 36.6,
+      "mbps": 97.7
+    },
+    {
+      "resolution": "NUM_4K",
+      "fps": "NUM_30_0",
+      "start_ack_ms": 372.1,
+      "start_ok": true,
+      "start_to_encoding_ms": 410.8,
+      "stop_to_idle_ms": 671.1,
+      "file": "100GOPRO/GX010408.MP4",
+      "width": 3840,
+      "height": 2160,
+      "duration_s": 3,
+      "frame_rate": 29.97,
+      "size_mb": 26.1,
+      "mbps": 69.6
+    },
+    {
+      "resolution": "NUM_4K",
+      "fps": "NUM_24_0",
+      "start_ack_ms": 374.2,
+      "start_ok": true,
+      "start_to_encoding_ms": 553.3,
+      "stop_to_idle_ms": 691.3,
+      "file": "100GOPRO/GX010409.MP4",
+      "width": 3840,
+      "height": 2160,
+      "duration_s": 3,
+      "frame_rate": 23.98,
+      "size_mb": 24.4,
+      "mbps": 65.0
+    },
+    {
+      "resolution": "NUM_2_7K",
+      "fps": "NUM_240_0",
+      "start_ack_ms": 367.3,
+      "start_ok": true,
+      "start_to_encoding_ms": 416.7,
+      "stop_to_idle_ms": 505.8,
+      "file": "100GOPRO/GX010410.MP4",
+      "width": 2704,
+      "height": 1520,
+      "duration_s": 3,
+      "frame_rate": 239.76,
+      "size_mb": 37.8,
+      "mbps": 100.7
+    },
+    {
+      "resolution": "NUM_2_7K",
+      "fps": "NUM_120_0",
+      "start_ack_ms": 367.8,
+      "start_ok": true,
+      "start_to_encoding_ms": 417.8,
+      "stop_to_idle_ms": 512.5,
+      "file": "100GOPRO/GX010411.MP4",
+      "width": 2704,
+      "height": 1520,
+      "duration_s": 3,
+      "frame_rate": 119.88,
+      "size_mb": 35.9,
+      "mbps": 95.6
+    },
+    {
+      "resolution": "NUM_2_7K",
+      "fps": "NUM_60_0",
+      "start_ack_ms": 369.5,
+      "start_ok": true,
+      "start_to_encoding_ms": 409.5,
+      "stop_to_idle_ms": 558.7,
+      "file": "100GOPRO/GX010412.MP4",
+      "width": 2704,
+      "height": 1520,
+      "duration_s": 3,
+      "frame_rate": 59.94,
+      "size_mb": 33.4,
+      "mbps": 89.2
+    },
+    {
+      "resolution": "NUM_2_7K_4_3",
+      "fps": "NUM_120_0",
+      "start_ack_ms": 360.5,
+      "start_ok": true,
+      "start_to_encoding_ms": 416.8,
+      "stop_to_idle_ms": 524.0,
+      "file": "100GOPRO/GX010413.MP4",
+      "width": 2704,
+      "height": 2028,
+      "duration_s": 3,
+      "frame_rate": 119.88,
+      "size_mb": 36.8,
+      "mbps": 98.1
+    },
+    {
+      "resolution": "NUM_2_7K_4_3",
+      "fps": "NUM_60_0",
+      "start_ack_ms": 337.6,
+      "start_ok": true,
+      "start_to_encoding_ms": 386.0,
+      "stop_to_idle_ms": 544.9,
+      "file": "100GOPRO/GX010414.MP4",
+      "width": 2704,
+      "height": 2028,
+      "duration_s": 3,
+      "frame_rate": 59.94,
+      "size_mb": 37.0,
+      "mbps": 98.6
+    },
+    {
+      "resolution": "NUM_1080",
+      "fps": "NUM_240_0",
+      "start_ack_ms": 356.8,
+      "start_ok": true,
+      "start_to_encoding_ms": 412.9,
+      "stop_to_idle_ms": 491.6,
+      "file": "100GOPRO/GX010415.MP4",
+      "width": 1920,
+      "height": 1080,
+      "duration_s": 3,
+      "frame_rate": 239.76,
+      "size_mb": 29.7,
+      "mbps": 79.2
+    },
+    {
+      "resolution": "NUM_1080",
+      "fps": "NUM_120_0",
+      "start_ack_ms": 368.3,
+      "start_ok": true,
+      "start_to_encoding_ms": 418.6,
+      "stop_to_idle_ms": 516.8,
+      "file": "100GOPRO/GX010416.MP4",
+      "width": 1920,
+      "height": 1080,
+      "duration_s": 3,
+      "frame_rate": 119.88,
+      "size_mb": 16.8,
+      "mbps": 44.8
+    },
+    {
+      "resolution": "NUM_1080",
+      "fps": "NUM_60_0",
+      "start_ack_ms": 366.6,
+      "start_ok": true,
+      "start_to_encoding_ms": 406.6,
+      "stop_to_idle_ms": 572.0,
+      "file": "100GOPRO/GX010417.MP4",
+      "width": 1920,
+      "height": 1080,
+      "duration_s": 3,
+      "frame_rate": 59.94,
+      "size_mb": 22.0,
+      "mbps": 58.7
+    },
+    {
+      "resolution": "NUM_1080",
+      "fps": "NUM_30_0",
+      "start_ack_ms": 370.3,
+      "start_ok": true,
+      "start_to_encoding_ms": 418.7,
+      "stop_to_idle_ms": 625.6,
+      "file": "100GOPRO/GX010418.MP4",
+      "width": 1920,
+      "height": 1080,
+      "duration_s": 3,
+      "frame_rate": 29.97,
+      "size_mb": 5.7,
+      "mbps": 15.2
+    },
+    {
+      "resolution": "NUM_1080",
+      "fps": "NUM_24_0",
+      "start_ack_ms": 372.9,
+      "start_ok": true,
+      "start_to_encoding_ms": 413.3,
+      "stop_to_idle_ms": 605.4,
+      "file": "100GOPRO/GX010419.MP4",
+      "width": 1920,
+      "height": 1080,
+      "duration_s": 3,
+      "frame_rate": 23.98,
+      "size_mb": 5.0,
+      "mbps": 13.3
+    },
+    {
+      "resolution": "NUM_4K_4_3",
+      "fps": "NUM_60_0",
+      "start_ack_ms": 388.3,
+      "start_ok": true,
+      "start_to_encoding_ms": 430.7,
+      "stop_to_idle_ms": 610.5,
+      "file": "100GOPRO/GX010420.MP4",
+      "width": 4000,
+      "height": 3000,
+      "duration_s": 3,
+      "frame_rate": 59.94,
+      "size_mb": 38.7,
+      "mbps": 103.1
+    },
+    {
+      "resolution": "NUM_4K_4_3",
+      "fps": "NUM_30_0",
+      "start_ack_ms": 333.0,
+      "start_ok": true,
+      "start_to_encoding_ms": 386.5,
+      "stop_to_idle_ms": 638.5,
+      "file": "100GOPRO/GX010421.MP4",
+      "width": 4000,
+      "height": 3000,
+      "duration_s": 3,
+      "frame_rate": 29.97,
+      "size_mb": 33.8,
+      "mbps": 90.1
+    },
+    {
+      "resolution": "NUM_4K_4_3",
+      "fps": "NUM_24_0",
+      "start_ack_ms": 340.8,
+      "start_ok": true,
+      "start_to_encoding_ms": 383.6,
+      "stop_to_idle_ms": 616.9,
+      "file": "100GOPRO/GX010422.MP4",
+      "width": 4000,
+      "height": 3000,
+      "duration_s": 3,
+      "frame_rate": 23.98,
+      "size_mb": 26.8,
+      "mbps": 71.5
+    },
+    {
+      "resolution": "NUM_5K_4_3",
+      "fps": "NUM_30_0",
+      "start_ack_ms": 1754.6,
+      "start_ok": true,
+      "start_to_encoding_ms": 1792.1,
+      "stop_to_idle_ms": 663.8,
+      "file": "100GOPRO/GX010423.MP4",
+      "width": 5120,
+      "height": 3840,
+      "duration_s": 4,
+      "frame_rate": 29.97,
+      "size_mb": 55.9,
+      "mbps": 111.8
+    },
+    {
+      "resolution": "NUM_5K_4_3",
+      "fps": "NUM_24_0",
+      "start_ack_ms": 335.9,
+      "start_ok": true,
+      "start_to_encoding_ms": 373.3,
+      "stop_to_idle_ms": 645.9,
+      "file": "100GOPRO/GX010424.MP4",
+      "width": 5120,
+      "height": 3840,
+      "duration_s": 3,
+      "frame_rate": 23.98,
+      "size_mb": 32.1,
+      "mbps": 85.7
+    },
+    {
+      "resolution": "NUM_5_3K",
+      "fps": "NUM_60_0",
+      "start_ack_ms": 486.7,
+      "start_ok": true,
+      "start_to_encoding_ms": 533.1,
+      "stop_to_idle_ms": 565.7,
+      "file": "100GOPRO/GX010425.MP4",
+      "width": 5312,
+      "height": 2988,
+      "duration_s": 3,
+      "frame_rate": 59.94,
+      "size_mb": 36.4,
+      "mbps": 97.0
+    },
+    {
+      "resolution": "NUM_5_3K",
+      "fps": "NUM_30_0",
+      "start_ack_ms": 366.2,
+      "start_ok": true,
+      "start_to_encoding_ms": 415.2,
+      "stop_to_idle_ms": 745.0,
+      "file": "100GOPRO/GX010426.MP4",
+      "width": 5312,
+      "height": 2988,
+      "duration_s": 3,
+      "frame_rate": 29.97,
+      "size_mb": 36.7,
+      "mbps": 97.9
+    },
+    {
+      "resolution": "NUM_5_3K",
+      "fps": "NUM_24_0",
+      "start_ack_ms": 368.5,
+      "start_ok": true,
+      "start_to_encoding_ms": 407.8,
+      "stop_to_idle_ms": 641.2,
+      "file": "100GOPRO/GX010427.MP4",
+      "width": 5312,
+      "height": 2988,
+      "duration_s": 3,
+      "frame_rate": 23.98,
+      "size_mb": 31.3,
+      "mbps": 83.4
+    }
+  ],
+  "restored": {
+    "video_resolution": 1,
+    "frames_per_second": 1,
+    "video_lens": 4,
+    "hypersmooth": 3,
+    "video_bit_rate": null,
+    "anti_flicker": 2,
+    "video_performance_mode": 0
+  }
+}

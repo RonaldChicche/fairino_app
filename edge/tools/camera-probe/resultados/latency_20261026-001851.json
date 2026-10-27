@@ -1,0 +1,31 @@
+{
+  "started": "2026-10-26T00:18:44",
+  "mode": "latency",
+  "info": {
+    "battery_pct": 100,
+    "sd_remaining_kb": 121945472,
+    "usb_controlled": 1,
+    "settings": {
+      "video_resolution": 1,
+      "frames_per_second": 1,
+      "video_lens": 4,
+      "hypersmooth": 3,
+      "video_bit_rate": null,
+      "anti_flicker": 2,
+      "video_performance_mode": 0
+    }
+  },
+  "fixed_applied": {
+    "video_bit_rate": false,
+    "hypersmooth": true
+  },
+  "restored": {
+    "video_resolution": 1,
+    "frames_per_second": 1,
+    "video_lens": 4,
+    "hypersmooth": 3,
+    "video_bit_rate": null,
+    "anti_flicker": 2,
+    "video_performance_mode": 0
+  }
+}

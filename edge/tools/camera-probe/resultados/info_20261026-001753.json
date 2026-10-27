@@ -1,0 +1,28 @@
+{
+  "started": "2026-10-26T00:17:52",
+  "mode": "info",
+  "info": {
+    "battery_pct": 100,
+    "sd_remaining_kb": 121945472,
+    "usb_controlled": 1,
+    "settings": {
+      "video_resolution": 1,
+      "frames_per_second": 1,
+      "video_lens": 4,
+      "hypersmooth": 3,
+      "video_bit_rate": null,
+      "anti_flicker": 2,
+      "video_performance_mode": 0
+    },
+    "camera_info_error": "ResponseTimeout('Response timeout occurred of 5 seconds')"
+  },
+  "restored": {
+    "video_resolution": 1,
+    "frames_per_second": 1,
+    "video_lens": 4,
+    "hypersmooth": 3,
+    "video_bit_rate": null,
+    "anti_flicker": 2,
+    "video_performance_mode": 0
+  }
+}
