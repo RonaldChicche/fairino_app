@@ -15,6 +15,7 @@ Servicio Python que corre junto al robot. Orquesta cada toma sin depender de int
 - Diseño con *src layout*: el código vive en `src/edge/`.
 - `session/` es el núcleo: la máquina de estados, el candado y los puertos que necesita (robot, cámara, render, subida).
 - `robot/` y `camera/` son adaptadores de esos puertos, cada uno con su versión falsa. `session/` no importa de ellos.
+- `robot/` y `camera/` conservan su falso porque tienen estado y servirán para desarrollar sin hardware. Todo cambio en su puerto o adaptador actualiza el falso en el mismo cambio, y el falso reproduce los fallos que importan: la cámara que no confirma y el robot que falla a mitad. Los puertos simples (`render/` y otros) no exigen falso: basta un mock en la prueba, y se crea un falso solo si hay estado o se reutiliza.
 - `app.py` conecta los adaptadores con el núcleo. Es el único lugar que conoce a todos.
 - Todo lo que dependa de internet pasa por `uploader/`. El camino de la toma nunca espera a la nube.
 
