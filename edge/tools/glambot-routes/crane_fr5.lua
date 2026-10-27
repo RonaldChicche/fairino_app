@@ -1,15 +1,4 @@
--- Glambot: grúa vertical relativa al objetivo. Generado por experiments/glambot-routes/routes.py; no editar a mano.
--- Parámetros: standoff 350.0 mm · azimut -0.0° · dz -150.0 → 250.0 mm · 6 puntos · cámara a 100.0 mm · velocidad 20.0% · blend 10.0 mm
---
--- Protocolo por variables de sistema:
---   PC → robot: s_var_1..3 = objetivo x, y, z [mm, base] · s_var_4 = ID de toma
---               s_var_5 = cámara grabando: el PC escribe aquí el ID de toma cuando la cámara lo confirma
---   robot → PC: s_var_6 = estado · s_var_7 = ID de toma aceptado
---   Estados: 0 iniciado · 1 esperando cámara · 2 moviendo · 3 terminado
---            -1 punto inalcanzable · -2 la cámara no confirmó a tiempo
--- El robot no se mueve hasta que s_var_5 coincide con el ID de toma (regla dura de CLAUDE.md).
-
-local ROUTE = {  -- brida relativa al objetivo: {dx, dy, dz, rx, ry, rz} [mm, grados]
+local ROUTE = {
   {441.9145, -0.0000, -189.3919, -66.8014, 0.0000, 90.0000},
   {448.0581, -0.0000, -89.6116, -78.6901, 0.0000, 90.0000},
   {449.9592, -0.0000, 12.8560, -91.6366, 0.0000, 90.0000},
@@ -17,15 +6,14 @@ local ROUTE = {  -- brida relativa al objetivo: {dx, dy, dz, rx, ry, rz} [mm, gr
   {439.9508, -0.0000, 213.6904, -115.9065, 0.0000, 90.0000},
   {431.3733, -0.0000, 308.1238, -125.5377, 0.0000, 90.0000}
 }
-local SEED = {-16.1740, 73.7630, -119.7590, -158.0520, -75.1650, 6.5180}  -- postura de referencia para elegir la solución de cinemática inversa
+local SEED = {-16.1740, 73.7630, -119.7590, -158.0520, -75.1650, 6.5180}
 local TOOL = 0
 local USER = 0
 local SPEED = 20.0
 local ACC = 50.0
 local BLEND_R = 10.0
-local CAMERA_TIMEOUT_TICKS = 3000  -- cada tick espera 10 ms
+local CAMERA_TIMEOUT_TICKS = 3000
 
--- El controlador ejecuta el script al subirlo para validarlo; ahí la cinemática devuelve nil y no se mueve nada
 local check = GetForwardKin(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 if check == nil then
   return
@@ -38,7 +26,6 @@ local tz = GetSysVarValue(s_var_3)
 local take_id = GetSysVarValue(s_var_4)
 SetSysVarValue(s_var_7, take_id)
 
--- 1. Todos los puntos deben tener solución antes de mover nada
 local joints = {}
 local ref = SEED
 for i, p in ipairs(ROUTE) do
@@ -52,7 +39,6 @@ for i, p in ipairs(ROUTE) do
   ref = solution
 end
 
--- 2. Esperar a que el PC confirme que la cámara está grabando
 SetSysVarValue(s_var_6, 1)
 local ready = false
 for _ = 1, CAMERA_TIMEOUT_TICKS do
@@ -67,7 +53,6 @@ if not ready then
   return
 end
 
--- 3. Ruta: MoveJ al primer punto y MoveL por el resto, con blending salvo en el último
 SetSysVarValue(s_var_6, 2)
 local j = joints[1]
 local p = ROUTE[1]

@@ -74,29 +74,21 @@ def has_solution(value):
     return value is True or value == 1 or (isinstance(value, str) and value.strip().lower() == "true")
 
 
-LUA_TEMPLATE_NOWAIT = """-- Glambot: grúa vertical relativa al objetivo. Generado por experiments/glambot-routes/routes.py; no editar a mano.
--- Parámetros: {name} · {num_points} puntos · cámara a {camera_offset:.1f} mm · velocidad {speed}% · blend {blend} mm · generado desde el simulador de toma (sim/)
---
--- Objetivo fijo en la base del robot: {{{tx:.1f}, {ty:.1f}, {tz:.1f}}} mm.
--- Estado: s_var_6 = 0 iniciado · 2 moviendo · 3 terminado · -1 punto inalcanzable.
--- Esta variante no espera confirmación externa: tras validar la ruta, comienza inmediatamente.
-
-local REVIEW_ONLY = true
+LUA_TEMPLATE_NOWAIT = """local REVIEW_ONLY = true
 if REVIEW_ONLY then
   return
 end
 
-local ROUTE = {{  -- brida relativa al objetivo: {{dx, dy, dz, rx, ry, rz}} [mm, grados]
+local ROUTE = {{
 {route_rows}
 }}
-local SEED = {{{seed_str}}}  -- postura de referencia para elegir la solución de cinemática inversa
+local SEED = {{{seed_str}}}
 local TOOL = 0
 local USER = 0
 local SPEED = {speed}
 local ACC = {acc}
 local BLEND_R = {blend}
 
--- El controlador ejecuta el script al subirlo para validarlo; ahí la cinemática devuelve nil y no se mueve nada
 local check = GetForwardKin(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 if check == nil then
   return
@@ -107,7 +99,6 @@ local tx = {tx:.1f}
 local ty = {ty:.1f}
 local tz = {tz:.1f}
 
--- 1. Todos los puntos deben tener solución antes de mover nada
 local joints = {{}}
 local ref = SEED
 for i, p in ipairs(ROUTE) do
@@ -121,7 +112,6 @@ for i, p in ipairs(ROUTE) do
   ref = solution
 end
 
--- 2. Ruta: MoveJ al primer punto y MoveL por el resto, con blending salvo en el último
 SetSysVarValue(s_var_6, 2)
 local j = joints[1]
 local p = ROUTE[1]

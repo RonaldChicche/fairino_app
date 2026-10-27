@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Servidor local del simulador de toma.
 
-Sirve el visor y guarda las rutas en experiments/glambot-routes/routes/. El Lua lo genera routes.py,
+Sirve el visor y guarda las rutas en edge/tools/glambot-routes/routes/. El Lua lo genera routes.py,
 que es el único lugar con la geometría: el visor dibuja, Python calcula.
 
   python3 server.py [--port 8765]

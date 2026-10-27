@@ -2,12 +2,14 @@
 
 Rutas de glambot como programas Lua del controlador FAIRINO, generadas en el PC y probadas en FAIRINO SimMachine. Fecha: 2026-09-11.
 
-**Entorno de prueba:**
-- SimMachine Docker v3.9.3 (controlador `V3.9.15-LX`, WebApp `v3.9.3`) en la instancia `fr10-sim`, contenedor `fairino-container` en `192.168.58.2`.
+> **La instancia de SimMachine en EC2 se dio de baja y `experiments/` se borró.** Este archivo conserva lo medido allí (hallazgos del Lua, del SDK y de la grúa en el FR5), que sigue valiendo para el robot real, y quita los pasos para levantar esa infraestructura. Todo lo verificado «en SimMachine» hay que reconfirmarlo en el FR10.
+
+**Entorno de prueba (dado de baja):**
+- SimMachine Docker v3.9.3 (controlador `V3.9.15-LX`, WebApp `v3.9.3`) en una instancia EC2, contenedor `fairino-container` en `192.168.58.2`.
 - Descargado de fairino.support (Fairino Europe), SHA-256 `355f4c7f015b920d2a9ebf9b5e4456bbe1d1762895774d11d8976ded74238927`. El enlace de la documentación oficial (Google Drive) está retirado.
 - **El robot simulado es un FR5** (`FR5-V1-002(V6.0)`). Pasarlo a FR10 exige la contraseña de modo mantenimiento, que FAIRINO no publica (pendiente con FAIRINO).
-- **La WebApp solo muestra el robot en vivo si se abre sin puerto en la URL.** El estado en tiempo real (articulaciones, estado del programa, habilitación) llega por un WebSocket que la página arma como `ws://<location.host>:9999`. Entrando por `localhost:18080` queda `ws://localhost:18080:9999`, una URL inválida: la vista 3D se congela en la postura cero y parece que el robot no se mueve aunque el controlador sí lo haga. Solución: `fr10 webapp up`, que abre el túnel por el puerto 80 local y el del WebSocket (detalle en `experiments/fr10-sim/SETUP.md`). Verificado con Chrome headless el 2026-09-11: con el WebSocket conectado, la vista 3D siguió un `MoveJ` del SDK.
-- **SDK Python `v2.2.3_robot3.9.3`**, del repo oficial. El SDK vendorizado en `experiments/fairino` (V2.2.8, para 3.9.9) lee el estado por CNDE (puerto 20005), que la 3.9.3 no tiene, y marca la conexión como caída.
+- **La WebApp solo muestra el robot en vivo si se abre sin puerto en la URL.** El estado en tiempo real (articulaciones, estado del programa, habilitación) llega por un WebSocket que la página arma como `ws://<location.host>:9999`. Entrando por `localhost:18080` queda `ws://localhost:18080:9999`, una URL inválida: la vista 3D se congela en la postura cero y parece que el robot no se mueve aunque el controlador sí lo haga. Solución: abrir el túnel por el puerto 80 local y el del WebSocket. Verificado con Chrome headless el 2026-09-11: con el WebSocket conectado, la vista 3D siguió un `MoveJ` del SDK.
+- **SDK Python `v2.2.3_robot3.9.3`**, del repo oficial. El SDK que descarga `get_sdk` en `edge/vendor/fairino` (V2.2.8, para 3.9.9) lee el estado por CNDE (puerto 20005), que la 3.9.3 no tiene, y marca la conexión como caída.
 
 ## Archivos
 
@@ -21,42 +23,16 @@ Rutas de glambot como programas Lua del controlador FAIRINO, generadas en el PC 
 
 ## Cómo reproducir
 
-**Preparar la instancia (una vez).** SimMachine se instala siguiendo `experiments/fr10-sim/SETUP.md` ("Desde cero", pasos 6 y 7). Luego, desde la raíz del repo:
-
-```bash
-# SDK Python v2.2.3_robot3.9.3 del repo oficial de FAIRINO: basta con Robot.py
-fr10 ssh 'bash -s' <<'EOF'
-set -e
-TAG=v2.2.3_robot3.9.3
-D=~/fairino_sdk_v2.2.3/fairino
-mkdir -p "$D" && touch "$D/__init__.py"
-P=$(curl -fsS "https://api.github.com/repos/FAIR-INNOVATION/fairino-python-sdk/git/trees/$TAG?recursive=1" \
-  | python3 -c "import sys,json; c=[x['path'] for x in json.load(sys.stdin)['tree'] if x['path'].endswith('Robot.py')]; print(next((p for p in c if 'linux' in p.lower()), c[0]))")
-curl -fsSL -o "$D/Robot.py" "https://raw.githubusercontent.com/FAIR-INNOVATION/fairino-python-sdk/$TAG/$P"
-EOF
-
-# Copiar esta carpeta a ~/glambot-routes en la instancia; repetir tras cada cambio
-set -a; . experiments/env/.env; set +a
-IP=$(aws ec2 describe-instances --region "$FR10_REGION" \
-     --filters "Name=tag:Name,Values=$FR10_NAME" Name=instance-state-name,Values=running \
-     --query 'Reservations[0].Instances[0].PublicIpAddress' --output text)
-scp -q -r -i "$FR10_PEM" -o HostKeyAlias="$FR10_NAME" -o UserKnownHostsFile=~/.config/fr10/known_hosts \
-  experiments/glambot-routes "ubuntu@$IP:"
-```
-
-**En cada sesión:**
-1. `fr10 up`
-2. `fr10 ssh 'sudo docker start fairino-container'`
-3. Para ver el robot: `fr10 webapp up`
-
-Después, en la instancia (`fr10 ssh`, luego `cd ~/glambot-routes`):
+Hace falta un controlador FAIRINO alcanzable (el robot real, o un SimMachine propio) y el SDK de `edge/vendor/fairino` (`get_sdk.sh`). Desde esta carpeta:
 
 ```bash
 ROUTE="--target -900 0 350 --standoff 350 --dz-start -150 --dz-end 250 --steps 6 --camera-offset 100"
-python3 planner.py --ip 192.168.58.2 --sdk ~/fairino_sdk_v2.2.3 $ROUTE --samples 10 --max-jump 15 --extra-seed 0 -90 90 -90 -90 0
+python3 planner.py --ip <ip del controlador> --sdk <ruta del SDK> $ROUTE --samples 10 --max-jump 15 --extra-seed 0 -90 90 -90 -90 0
 python3 routes.py $ROUTE --lua crane_fr5.lua --seed-joints <semilla del planner> --speed 20 --acc 50 --blend 10 --camera-timeout 30
-python3 run_route.py --ip 192.168.58.2 --sdk ~/fairino_sdk_v2.2.3 --lua crane_fr5.lua $ROUTE --take-id 1 --camera-delay 1.5 --start-joints 0 -90 90 -90 -90 0
+python3 run_route.py --ip <ip del controlador> --sdk <ruta del SDK> --lua crane_fr5.lua $ROUTE --take-id 1 --camera-delay 1.5 --start-joints 0 -90 90 -90 -90 0
 ```
+
+El SDK v2.2.3 (`v2.2.3_robot3.9.3`, del repo oficial) es el que habla bien con un controlador 3.9.3; con el robot real, usa el que corresponda a su versión.
 
 ## Protocolo del `.lua` (variables de sistema)
 
@@ -169,7 +145,7 @@ python3 run_route.py --ip 192.168.58.2 --sdk ~/fairino_sdk_v2.2.3 --lua crane_fr
 
 Del rastreador oficial (`github.com/FAIR-INNOVATION/fairino-python-sdk/issues`, consultado el 2026-09-12) y de leer el SDK vendorizado. **Nada de esto está verificado**: SimMachine no sirve para probarlo, hace falta el FR10 real.
 
-**Del código del SDK** (`experiments/fairino/Robot.py`):
+**Del código del SDK** (`edge/vendor/fairino/Robot.py`):
 
 - [ ] Cada función empieza con `while self.reconnect_flag: sleep(0.1)` y envuelve la llamada en un bucle que reintenta ante `socket.error` **sin tope ni tiempo límite**: puede no volver nunca. Medir qué ocurre al desconectar el cable a mitad de un `MoveL`.
 - [ ] Los parámetros de reconexión son atributos de clase (`RPC._reconnect_enable`), compartidos entre instancias.
