@@ -18,7 +18,6 @@ Rutas de glambot como programas Lua del controlador FAIRINO, generadas en el PC 
 | `routes.py` | Geometría "mirar a un punto" en la convención FAIRINO (R = Rz·Ry·Rx), grúa vertical relativa al objetivo, conversión cámara → brida, interpolación de poses y generador del `.lua` |
 | `planner.py` | Elige la semilla de cinemática inversa recorriendo la ruta con puntos intermedios y la IK del propio controlador, maximizando el margen a los límites |
 | `run_route.py` | Ejecuta un `.lua` de ruta en el controlador emulando el lado del PC (objetivo, ID de toma, confirmación de cámara) y registra estados y poses |
-| `simmachine_probe.py`, `lua_probes/` | Pruebas mínimas de capacidades del Lua del controlador |
 | `crane_fr5.lua` | Programa generado y **ejecutado con éxito** en SimMachine (FR5) |
 
 ## Cómo reproducir
@@ -58,17 +57,6 @@ El SDK v2.2.3 (`v2.2.3_robot3.9.3`, del repo oficial) es el que habla bien con u
    - `GetInverseKin(type, x, y, z, rx, ry, rz, config)` devuelve 6 valores;
    - `GetInverseKinRef(type, {pose}, {ref})` devuelve una tabla;
    - `GetInverseKinHasSolution` devuelve un **número** (1/0), no un booleano.
-
-   *Cómo leer la salida de los probes de cinemática.* Los `.lua` publican el **tipo** de lo que devolvió cada
-   función, no su valor, porque justamente lo que se estaba averiguando era el tipo. Sin esta leyenda lo que
-   imprime `simmachine_probe.py` es ilegible:
-   - `probe_ik.lua` → `s_var_5` (pose alcanzable) y `s_var_6` (pose inalcanzable): `1` = booleano `true` ·
-     `0` = booleano `false` · `2` = texto `"True"` · `3` = texto `"False"` · `4` = número · `9` = otro tipo.
-     Con el código `4`, el número va en `s_var_7` (alcanzable) y `s_var_8` (inalcanzable).
-   - `probe_ikref.lua` → `s_var_11..16` = las seis articulaciones de `GetInverseKin`; `s_var_17` y `s_var_18` =
-     los dos primeros retornos de `GetInverseKinRef`; `s_var_19` = tipo del primer retorno de
-     `GetInverseKinRef`: `4` = número · `5` = tabla · `0` = `nil` · `9` = otro. En `s_var_11..18`, el valor
-     **`-999` significa "sin valor"** (el retorno fue `nil`).
 7. **Movimiento:** `MoveJ` y `MoveL` con la firma textual del manual FRLua funcionan. Una prueba bajó exactamente 50 mm.
 
    Los argumentos son **posicionales y sin nombres**, y el manual FRLua (`MoveJ` pág. 50, `MoveL` pág. 52) es la

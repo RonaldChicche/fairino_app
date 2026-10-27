@@ -113,7 +113,6 @@
   <button id="save">Guardar</button>
   <button id="validate">Validar</button>
   <button id="generate" class="primary">Generar Lua</button>
-  <button id="upload">Cargar al FAIRINO</button>
   <button id="play">▶ Reproducir</button>
   <span id="msg"></span>
 </header>
@@ -265,7 +264,6 @@ const spec = {
 // cam es la posición de la cámara libre respecto al objetivo, por ejes: x adelante, y izquierda-derecha, z altura
 const ui = { cam: new THREE.Vector3(900, 0, -80), dur: 28, sel: [], playing: false, t0: 0, mode: "both" };
 const validation = { state: "none", data: null, error: "", stamp: "" };
-const generated = { name: "", stamp: "" };   // qué ruta describe el .lua que hay en el servidor
 let dragFrom = null;
 let nextId = 1;
 
@@ -1212,26 +1210,10 @@ $("generate").onclick = async () => {
     msg(gen.error, "err");
     return;
   }
-  generated.name = name;
-  generated.stamp = enviado;
   const aviso = (robotNotice() || {}).aviso;
   msg([(gen.data && gen.data.mensaje) || "Lua generado", aviso].filter(Boolean).join(" · "),
       aviso ? "err" : "ok");
   loadRoutes();
-};
-
-// Sube el .lua que hay en el servidor, no lo que se ve: si no son lo mismo hay que decirlo.
-$("upload").onclick = async () => {
-  const name = routeName();
-  if (!name) return;
-  msg("cargando al FAIRINO…");
-  const enviado = geomStamp();
-  const r = await postJSON(`/api/upload/${name}`, {});
-  if (!r.ok) { msg(r.error, "err"); return; }
-  const mismo = generated.name === name && generated.stamp === enviado;
-  const texto = (r.data && (r.data.mensaje || r.data.resumen)) || "cargado";
-  msg(mismo ? texto : `${texto} · ojo: ese .lua no es la ruta que tienes en pantalla, genérala de nuevo`,
-      mismo ? "ok" : "err");
 };
 
 async function loadRoutes() {
@@ -1311,7 +1293,6 @@ async function loadRoute(name) {
   spec.subject_height = Math.round((spec.target[2] + spec.robot.mount_z - spec.aim_z_offset) / HEAD_FRAC);
   ui.sel = [];
   validation.state = "none"; validation.data = null; validation.error = "";
-  generated.name = ""; generated.stamp = "";
   $("name").value = spec.name;
   $("seed").value = (spec.seed_joints || []).join(" ");
   if (spec.waypoints.length) camFromWaypoint(0);
