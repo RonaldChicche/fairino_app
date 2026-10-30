@@ -1,0 +1,324 @@
+<title>Pipeline de render</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<style>
+  /* Plano de ingeniería: papel azulado, trazo fino, tres colores con significado fijo (hecho, pendiente, fallo). */
+  :root {
+    --bg: #f3f5f8;
+    --fg: #18212c;
+    --muted: #56626f;
+    --line: #8995a3;
+    --grid: #d9dee5;
+    --box: #ffffff;
+    --ok: #17627d;
+    --ok-tint: #e1eef3;
+    --warn: #a85a14;
+    --warn-tint: #f7ead9;
+    --bad: #a8322a;
+    --bad-tint: #f6e1de;
+    --on-warn: #ffffff;
+    --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11161c; --fg: #e4e9ef; --muted: #9ba6b3; --line: #5c6877; --grid: #26303b; --box: #19202a;
+      --ok: #62b5d3; --ok-tint: #17303a; --warn: #e3a463; --warn-tint: #3a2a18; --bad: #e57a70; --bad-tint: #3b1f1c;
+      --on-warn: #1a1208; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #11161c; --fg: #e4e9ef; --muted: #9ba6b3; --line: #5c6877; --grid: #26303b; --box: #19202a;
+    --ok: #62b5d3; --ok-tint: #17303a; --warn: #e3a463; --warn-tint: #3a2a18; --bad: #e57a70; --bad-tint: #3b1f1c;
+    --on-warn: #1a1208; color-scheme: dark;
+  }
+
+  body {
+    background: var(--bg); color: var(--fg); font-family: var(--sans); font-size: 15px; line-height: 1.55;
+    padding-block: 28px 48px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  main { max-width: 1040px; margin: 0 auto; display: flex; flex-direction: column; gap: 36px; }
+  h1 { font-size: 26px; line-height: 1.2; margin: 0 0 8px; font-weight: 600; letter-spacing: -0.01em; text-wrap: balance; }
+  h2 { font-size: 16px; margin: 0 0 4px; font-weight: 600; text-wrap: balance; }
+  p { margin: 0; max-width: 68ch; color: var(--muted); }
+  code, .mono { font-family: var(--mono); font-size: 0.92em; }
+  header { display: flex; flex-direction: column; gap: 14px; }
+  .io { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; font-size: 13px; }
+  .io span.chip { font-family: var(--mono); border: 1px solid var(--line); background: var(--box); padding: 4px 9px; border-radius: 4px; min-width: 0; }
+  .io .arrow { color: var(--muted); }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 13px; color: var(--muted); }
+  .legend div { display: flex; align-items: center; gap: 8px; }
+  .legend i { width: 26px; height: 14px; border: 1.5px solid; border-radius: 2px; display: inline-block; }
+  .legend .l-ok { border-color: var(--line); background: var(--box); }
+  .legend .l-warn { border-color: var(--warn); background: var(--warn-tint); border-style: dashed; }
+  .legend .l-bad { border-color: var(--bad); background: var(--bad-tint); }
+  figure { margin: 0; display: flex; flex-direction: column; gap: 10px; }
+  figcaption { max-width: 76ch; color: var(--muted); font-size: 14px; }
+  figcaption strong { color: var(--fg); font-weight: 600; }
+  .scroll { overflow-x: auto; border: 1px solid var(--grid); background: var(--bg); border-radius: 6px; }
+  .scroll svg { display: block; min-width: 760px; width: 100%; height: auto; }
+  footer { font-size: 13px; color: var(--muted); display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--grid); padding-top: 16px; }
+
+  svg text { font-family: var(--sans); fill: var(--fg); font-size: 12.5px; }
+  svg .t-title { font-weight: 600; font-size: 13px; }
+  svg .t-sub { fill: var(--muted); font-size: 11px; }
+  svg .t-mono { font-family: var(--mono); font-size: 10.5px; fill: var(--muted); }
+  svg .t-small { font-size: 11px; fill: var(--muted); }
+  svg .t-warn { fill: var(--warn); font-weight: 600; }
+  svg .t-bad { fill: var(--bad); font-size: 11px; }
+  svg .t-on-warn { fill: var(--on-warn); font-weight: 600; }
+  svg .box { fill: var(--box); stroke: var(--line); stroke-width: 1.3; }
+  svg .box-final { fill: var(--ok-tint); stroke: var(--ok); stroke-width: 2; }
+  svg .box-warn { fill: var(--warn-tint); stroke: var(--warn); stroke-width: 1.5; stroke-dasharray: 5 4; }
+  svg .box-branch { fill: var(--box); stroke: var(--line); stroke-width: 1.3; }
+  svg .box-branch-warn { fill: var(--warn-tint); stroke: var(--warn); stroke-width: 1.8; }
+  svg .bar-fail { fill: var(--bad-tint); stroke: var(--bad); stroke-width: 1.5; }
+  svg .flow { stroke: var(--fg); stroke-width: 1.4; fill: none; }
+  svg .flow-warn { stroke: var(--warn); stroke-width: 1.4; fill: none; stroke-dasharray: 5 4; }
+  svg .flow-bad { stroke: var(--bad); stroke-width: 1.4; fill: none; }
+  svg .grid { stroke: var(--grid); stroke-width: 1; }
+  svg .whisker { stroke: var(--muted); stroke-width: 1.3; fill: none; }
+  svg .bar-ok { fill: var(--ok); }
+  svg .bar-warn { fill: var(--warn); }
+  svg .head { fill: var(--fg); }
+  svg .head-warn { fill: var(--warn); }
+  svg .head-bad { fill: var(--bad); }
+</style>
+
+<main>
+  <header>
+    <div>
+      <h1>Pipeline de render</h1>
+      <p>Qué hace el edge con el video crudo de una toma hasta dejar un único archivo listo para el invitado. Lo dibujado en trazo continuo existe y se probó con clips reales de la GoPro.</p>
+    </div>
+    <div class="io" aria-label="Entrada y salida del render">
+      <span class="chip">raw.mp4 · 5.3K a 60 fps o 2.7K 4:3 a 120 fps</span>
+      <span class="arrow" aria-hidden="true">→</span>
+      <span class="chip">final.mp4 · 1080×1920, 30 fps, H.264, sin audio</span>
+    </div>
+    <div class="legend" aria-label="Leyenda">
+      <div><i class="l-ok"></i>implementado y probado</div>
+      <div><i class="l-warn"></i>pendiente</div>
+      <div><i class="l-bad"></i>fallo</div>
+    </div>
+  </header>
+
+  <figure>
+    <h2>Qué pasa cuando la sesión pide el render</h2>
+    <div class="scroll">
+      <svg viewBox="0 0 1000 300" role="img" aria-label="La sesión llama a FfmpegRenderer, que valida el ID, comprueba que exista el crudo, lee los fps, arma el comando y ejecuta ffmpeg sobre un archivo parcial que solo se renombra a final.mp4 si todo salió bien. Cualquier fallo pasa la sesión a failed. Faltan descargar el crudo de la cámara y la plantilla con la música.">
+        <defs>
+          <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><polygon class="head" points="0,0 10,5 0,10"/></marker>
+          <marker id="a1w" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><polygon class="head-warn" points="0,0 10,5 0,10"/></marker>
+          <marker id="a1b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><polygon class="head-bad" points="0,0 10,5 0,10"/></marker>
+        </defs>
+
+        <rect class="box-warn" x="252" y="12" width="212" height="40" rx="3"/>
+        <text class="t-warn" x="358" y="28" text-anchor="middle" style="font-size:11px">PENDIENTE</text>
+        <text class="t-small" x="358" y="43" text-anchor="middle">descargar el crudo de la cámara</text>
+        <line class="flow-warn" x1="358" y1="52" x2="358" y2="78" marker-end="url(#a1w)"/>
+
+        <rect class="box-warn" x="546" y="12" width="200" height="40" rx="3"/>
+        <text class="t-warn" x="646" y="28" text-anchor="middle" style="font-size:11px">PENDIENTE</text>
+        <text class="t-small" x="646" y="43" text-anchor="middle">plantilla y música (C5, D20)</text>
+        <line class="flow-warn" x1="646" y1="52" x2="646" y2="78" marker-end="url(#a1w)"/>
+
+        <g>
+          <rect class="box" x="14" y="80" width="112" height="72" rx="3"/>
+          <text class="t-title" x="70" y="104" text-anchor="middle">SessionManager</text>
+          <text class="t-sub" x="70" y="122" text-anchor="middle">estado rendering</text>
+          <text class="t-sub" x="70" y="138" text-anchor="middle">render(id)</text>
+
+          <rect class="box" x="158" y="80" width="112" height="72" rx="3"/>
+          <text class="t-title" x="214" y="104" text-anchor="middle">¿ID válido?</text>
+          <text class="t-sub" x="214" y="122" text-anchor="middle">sin rutas</text>
+          <text class="t-sub" x="214" y="138" text-anchor="middle">ni vacío</text>
+
+          <rect class="box" x="302" y="80" width="112" height="72" rx="3"/>
+          <text class="t-title" x="358" y="104" text-anchor="middle">¿Hay crudo?</text>
+          <text class="t-sub" x="358" y="122" text-anchor="middle">data/tomas/ID/</text>
+          <text class="t-sub" x="358" y="138" text-anchor="middle">raw.mp4</text>
+
+          <rect class="box" x="446" y="80" width="112" height="72" rx="3"/>
+          <text class="t-title" x="502" y="104" text-anchor="middle">ffprobe</text>
+          <text class="t-sub" x="502" y="122" text-anchor="middle">lee los fps</text>
+          <text class="t-sub" x="502" y="138" text-anchor="middle">del crudo</text>
+
+          <rect class="box" x="590" y="80" width="112" height="72" rx="3"/>
+          <text class="t-title" x="646" y="104" text-anchor="middle">build_command</text>
+          <text class="t-sub" x="646" y="122" text-anchor="middle">perfil + fps</text>
+          <text class="t-sub" x="646" y="138" text-anchor="middle">arma el comando</text>
+
+          <rect class="box" x="734" y="80" width="112" height="72" rx="3"/>
+          <text class="t-title" x="790" y="104" text-anchor="middle">ffmpeg</text>
+          <text class="t-sub" x="790" y="122" text-anchor="middle">escribe el</text>
+          <text class="t-sub" x="790" y="138" text-anchor="middle">archivo .part</text>
+
+          <rect class="box-final" x="878" y="80" width="112" height="72" rx="3"/>
+          <text class="t-title" x="934" y="104" text-anchor="middle">Renombra</text>
+          <text class="t-sub" x="934" y="122" text-anchor="middle">final.mp4</text>
+          <text class="t-sub" x="934" y="138" text-anchor="middle">estado done</text>
+        </g>
+
+        <g>
+          <line class="flow" x1="126" y1="116" x2="156" y2="116" marker-end="url(#a1)"/>
+          <line class="flow" x1="270" y1="116" x2="300" y2="116" marker-end="url(#a1)"/>
+          <line class="flow" x1="414" y1="116" x2="444" y2="116" marker-end="url(#a1)"/>
+          <line class="flow" x1="558" y1="116" x2="588" y2="116" marker-end="url(#a1)"/>
+          <line class="flow" x1="702" y1="116" x2="732" y2="116" marker-end="url(#a1)"/>
+          <line class="flow" x1="846" y1="116" x2="876" y2="116" marker-end="url(#a1)"/>
+          <text class="t-mono" x="142" y="108" text-anchor="middle">id</text>
+          <text class="t-mono" x="285" y="108" text-anchor="middle">sí</text>
+          <text class="t-mono" x="429" y="108" text-anchor="middle">sí</text>
+          <text class="t-mono" x="573" y="108" text-anchor="middle">fps</text>
+          <text class="t-mono" x="717" y="108" text-anchor="middle">cmd</text>
+          <text class="t-mono" x="861" y="108" text-anchor="middle">ok</text>
+        </g>
+
+        <rect class="bar-fail" x="14" y="236" width="976" height="44" rx="3"/>
+        <text class="t-title" x="502" y="262" text-anchor="middle" style="fill:var(--bad)">RenderError  →  la sesión pasa a failed</text>
+        <g>
+          <line class="flow-bad" x1="214" y1="152" x2="214" y2="234" marker-end="url(#a1b)"/>
+          <line class="flow-bad" x1="358" y1="152" x2="358" y2="234" marker-end="url(#a1b)"/>
+          <line class="flow-bad" x1="502" y1="152" x2="502" y2="234" marker-end="url(#a1b)"/>
+          <line class="flow-bad" x1="790" y1="152" x2="790" y2="234" marker-end="url(#a1b)"/>
+          <text class="t-bad" x="222" y="198">ID inválido</text>
+          <text class="t-bad" x="366" y="198">no hay crudo</text>
+          <text class="t-bad" x="510" y="198">ffprobe falla</text>
+          <text class="t-bad" x="798" y="198">ffmpeg falla o pasa de 900 s</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption><strong>Solo hay un final.mp4 por toma y nunca queda a medias.</strong> ffmpeg escribe un archivo parcial y el renombrado final ocurre únicamente cuando terminó bien. Si el ID trae una ruta, falta el crudo o ffmpeg falla o se pasa del tiempo, se mata el proceso y la sesión queda en failed. Hoy nada entrega el crudo al render: esa pieza falta.</figcaption>
+  </figure>
+
+  <figure>
+    <h2>Qué decide la cadena según los fps del crudo</h2>
+    <div class="scroll">
+      <svg viewBox="0 0 1000 390" role="img" aria-label="El video pasa por reducción de ruido, recorte 9:16 y escala a 1080 por 1920. Luego se compara los fps del crudo con 30 por el factor de cámara lenta, que vale 120 para 4 veces. Si el crudo tiene menos fps se interpolan fotogramas, si tiene los mismos se deja igual y si tiene más se descartan. Después se reafila, se ajusta el color, se aplica la cámara lenta y se codifica a 30 fps.">
+        <defs>
+          <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><polygon class="head" points="0,0 10,5 0,10"/></marker>
+        </defs>
+
+        <g>
+          <rect class="box" x="14" y="24" width="150" height="66" rx="3"/>
+          <text class="t-title" x="89" y="50" text-anchor="middle">raw.mp4</text>
+          <text class="t-sub" x="89" y="68" text-anchor="middle">de la cámara</text>
+          <rect class="box" x="198" y="24" width="150" height="66" rx="3"/>
+          <text class="t-title" x="273" y="50" text-anchor="middle">hqdn3d</text>
+          <text class="t-sub" x="273" y="68" text-anchor="middle">reduce el ruido</text>
+          <rect class="box" x="382" y="24" width="150" height="66" rx="3"/>
+          <text class="t-title" x="457" y="50" text-anchor="middle">crop 9:16</text>
+          <text class="t-sub" x="457" y="68" text-anchor="middle">ventana al centro</text>
+          <rect class="box" x="566" y="24" width="150" height="66" rx="3"/>
+          <text class="t-title" x="641" y="50" text-anchor="middle">scale</text>
+          <text class="t-sub" x="641" y="68" text-anchor="middle">1080×1920, lanczos</text>
+          <rect class="box" x="750" y="24" width="236" height="66" rx="3"/>
+          <text class="t-title" x="868" y="46" text-anchor="middle">¿fps del crudo?</text>
+          <text class="t-sub" x="868" y="63" text-anchor="middle">frente a 30 × factor de lenta</text>
+          <text class="t-sub" x="868" y="78" text-anchor="middle">(factor 4 → 120 fps)</text>
+          <line class="flow" x1="164" y1="57" x2="196" y2="57" marker-end="url(#a2)"/>
+          <line class="flow" x1="348" y1="57" x2="380" y2="57" marker-end="url(#a2)"/>
+          <line class="flow" x1="532" y1="57" x2="564" y2="57" marker-end="url(#a2)"/>
+          <line class="flow" x1="716" y1="57" x2="748" y2="57" marker-end="url(#a2)"/>
+        </g>
+
+        <polyline class="flow" points="868,90 868,122 480,122"/>
+        <line class="flow" x1="680" y1="122" x2="680" y2="148" marker-end="url(#a2)"/>
+        <line class="flow" x1="880" y1="122" x2="880" y2="148" marker-end="url(#a2)"/>
+        <line class="flow" x1="480" y1="122" x2="480" y2="148" marker-end="url(#a2)"/>
+        <text class="t-mono" x="490" y="140">menor</text>
+        <text class="t-mono" x="690" y="140">igual, ±2 %</text>
+        <text class="t-mono" x="890" y="140">mayor</text>
+
+        <rect class="box-branch-warn" x="390" y="150" width="180" height="76" rx="3"/>
+        <text class="t-title" x="480" y="174" text-anchor="middle">minterpolate</text>
+        <text class="t-sub" x="480" y="191" text-anchor="middle">inventa fotogramas</text>
+        <text class="t-warn" x="480" y="213" text-anchor="middle" style="font-size:11px">≈ 396 s con 4 s de clip</text>
+
+        <rect class="box-branch" x="590" y="150" width="180" height="76" rx="3"/>
+        <text class="t-title" x="680" y="174" text-anchor="middle">sin cambio</text>
+        <text class="t-sub" x="680" y="191" text-anchor="middle">el caso de la cámara</text>
+        <text class="t-sub" x="680" y="207" text-anchor="middle">a 120 fps (119,88)</text>
+
+        <rect class="box-branch" x="790" y="150" width="180" height="76" rx="3"/>
+        <text class="t-title" x="880" y="174" text-anchor="middle">fps=120</text>
+        <text class="t-sub" x="880" y="191" text-anchor="middle">descarta fotogramas</text>
+        <text class="t-sub" x="880" y="207" text-anchor="middle">si graba a 240 fps</text>
+
+        <polyline class="flow" points="480,226 480,252 89,252 89,286" marker-end="url(#a2)"/>
+        <line class="flow" x1="680" y1="226" x2="680" y2="252"/>
+        <line class="flow" x1="880" y1="226" x2="880" y2="252"/>
+        <line class="flow" x1="480" y1="252" x2="880" y2="252"/>
+
+        <g>
+          <rect class="box" x="14" y="288" width="150" height="66" rx="3"/>
+          <text class="t-title" x="89" y="314" text-anchor="middle">unsharp</text>
+          <text class="t-sub" x="89" y="332" text-anchor="middle">reafilado suave</text>
+          <rect class="box" x="198" y="288" width="150" height="66" rx="3"/>
+          <text class="t-title" x="273" y="314" text-anchor="middle">eq</text>
+          <text class="t-sub" x="273" y="332" text-anchor="middle">brillo y color</text>
+          <rect class="box" x="382" y="288" width="150" height="66" rx="3"/>
+          <text class="t-title" x="457" y="314" text-anchor="middle">setpts</text>
+          <text class="t-sub" x="457" y="332" text-anchor="middle">× factor: cámara lenta</text>
+          <rect class="box" x="566" y="288" width="150" height="66" rx="3"/>
+          <text class="t-title" x="641" y="314" text-anchor="middle">fps 30</text>
+          <text class="t-sub" x="641" y="332" text-anchor="middle">y yuv420p</text>
+          <rect class="box-final" x="750" y="288" width="236" height="66" rx="3"/>
+          <text class="t-title" x="868" y="314" text-anchor="middle">libx264, crf 18</text>
+          <text class="t-sub" x="868" y="332" text-anchor="middle">sin audio → final.mp4</text>
+          <line class="flow" x1="164" y1="321" x2="196" y2="321" marker-end="url(#a2)"/>
+          <line class="flow" x1="348" y1="321" x2="380" y2="321" marker-end="url(#a2)"/>
+          <line class="flow" x1="532" y1="321" x2="564" y2="321" marker-end="url(#a2)"/>
+          <line class="flow" x1="716" y1="321" x2="748" y2="321" marker-end="url(#a2)"/>
+        </g>
+      </svg>
+    </div>
+    <figcaption><strong>Los pasos son siempre los mismos; solo el del medio depende del crudo.</strong> Para 4× a 30 fps hacen falta 120 fotogramas de acción por segundo. Con la cámara a 120 fps (en realidad 119,88) no se toca nada, con 60 fps se inventan los que faltan y con 240 fps se descartan los que sobran. Esa rama de interpolación es la que hace lento el render.</figcaption>
+  </figure>
+
+  <figure>
+    <h2>Lo que cuesta llegar al 4×</h2>
+    <div class="scroll">
+      <svg viewBox="0 0 1000 250" role="img" aria-label="Tiempo de render para un clip de 4 segundos. La versión A, 2.7K 4:3 a 120 fps con 4 veces real, tarda 19 segundos. La B, 5.3K a 60 fps con 2 veces real, tarda 20. La C, 5.3K a 60 fps con 4 veces interpolado, tarda 396 segundos, unas 20 veces más.">
+        <line class="grid" x1="330" y1="36" x2="330" y2="200"/>
+        <line class="grid" x1="480" y1="36" x2="480" y2="200"/>
+        <line class="grid" x1="630" y1="36" x2="630" y2="200"/>
+        <line class="grid" x1="780" y1="36" x2="780" y2="200"/>
+        <line class="grid" x1="930" y1="36" x2="930" y2="200"/>
+        <text class="t-small" x="330" y="222" text-anchor="middle">0 s</text>
+        <text class="t-small" x="480" y="222" text-anchor="middle">100 s</text>
+        <text class="t-small" x="630" y="222" text-anchor="middle">200 s</text>
+        <text class="t-small" x="780" y="222" text-anchor="middle">300 s</text>
+        <text class="t-small" x="930" y="222" text-anchor="middle">400 s</text>
+
+        <text class="t-title" x="14" y="64">A · 2.7K 4:3 a 120 fps</text>
+        <text class="t-sub" x="14" y="82">4× real · SNR 39,6</text>
+        <rect class="bar-ok" x="330" y="56" width="28.5" height="26" rx="2"/>
+        <line class="whisker" x1="358.5" y1="69" x2="411" y2="69"/>
+        <line class="whisker" x1="411" y1="62" x2="411" y2="76"/>
+        <text class="t-small" x="422" y="73" style="fill:var(--fg)">19 s · de 37 a 54 s con el Mac cargado</text>
+
+        <text class="t-title" x="14" y="119">B · 5.3K a 60 fps</text>
+        <text class="t-sub" x="14" y="137">2× real · SNR 45,6</text>
+        <rect class="bar-ok" x="330" y="111" width="30" height="26" rx="2"/>
+        <line class="whisker" x1="360" y1="124" x2="411" y2="124"/>
+        <line class="whisker" x1="411" y1="117" x2="411" y2="131"/>
+        <text class="t-small" x="422" y="128" style="fill:var(--fg)">20 s · de 37 a 54 s con el Mac cargado</text>
+
+        <text class="t-title" x="14" y="174">C · 5.3K a 60 fps</text>
+        <text class="t-sub" x="14" y="192">4× interpolado · SNR 45,6 del crudo</text>
+        <rect class="bar-warn" x="330" y="166" width="594" height="26" rx="2"/>
+        <text class="t-on-warn" x="914" y="183" text-anchor="end">396 s · 6,6 min</text>
+      </svg>
+    </div>
+    <figcaption><strong>Obtener 4× desde 60 fps cuesta unas 20 veces más tiempo de render que grabar a 120 fps reales.</strong> A cambio, C parte de un crudo más limpio (SNR 45,6 frente a 39,6). Los tiempos son para un clip de 4 s, en un Mac M1 Pro. Con el equipo cargado, el mismo render sin interpolación tardó entre 37 y 54 s, así que no son cifras de rendimiento: hay que medirlas en el equipo del evento.</figcaption>
+  </figure>
+
+  <footer>
+    <div>Código: <code>edge/src/edge/render/</code> (<code>profile.py</code>, <code>command.py</code>, <code>ffmpeg.py</code>) · prueba: <code>edge/tests/test_render.py</code></div>
+    <div>Mediciones y opciones probadas: <code>edge/tools/camera-probe/OPCIONES.md</code></div>
+  </footer>
+</main>

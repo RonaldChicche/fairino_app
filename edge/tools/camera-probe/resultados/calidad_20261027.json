@@ -1,0 +1,54 @@
+{
+  "fecha": "2026-10-27",
+  "escena": "Sala de una casa de noche, luz de focos domésticos. Sujeto: ventilador con un cartel delante y un frasco al frente. Cámara fija a la altura de la mesa, sin trípode. Una sola toma por modo.",
+  "ajustes_fijos": {
+    "lente": "Wide",
+    "perfil_color": "Natural",
+    "ev": "0.0",
+    "balance_blancos": "5000K",
+    "hypersmooth": "Off",
+    "duracion_clip_s": 4
+  },
+  "metricas": {
+    "brillo": "media del gris (0 a 255) en la zona medida",
+    "ruido": "desviación típica de la diferencia entre fotogramas consecutivos dividida por raíz de 2, sobre una zona estática",
+    "snr": "brillo / ruido; más alto es mejor",
+    "nitidez": "valor absoluto medio del laplaciano de la imagen promedio; solo compara clips con el mismo encuadre"
+  },
+  "zona_medida_en_1080x1920": {
+    "16x9": {"x": 570, "y": 1360, "w": 200, "h": 140},
+    "4x3": {"x": 560, "y": 1280, "w": 160, "h": 140},
+    "5_3k": {"x": 590, "y": 1380, "w": 170, "h": 150}
+  },
+  "telemetria": {
+    "iso": 1600,
+    "obturador_120fps": "1/121",
+    "obturador_60fps": "1/61",
+    "nota": "ISO fijo en 1600 en todos los clips, incluso a 60 fps con el doble de exposición"
+  },
+  "etapa_1_modos": [
+    {"clip": "4x_4k_16x9_120", "lenta": "4x", "nitidez_camara": "Medium", "brillo": 92.1, "ruido": 3.25, "snr": 28.3, "nitidez": 10.75},
+    {"clip": "4x_2_7k_4x3_120", "lenta": "4x", "nitidez_camara": "Medium", "brillo": 99.2, "ruido": 2.51, "snr": 39.6, "nitidez": 5.71},
+    {"clip": "2x_5_3k_60", "lenta": "2x", "nitidez_camara": "Medium", "brillo": 128.3, "ruido": 2.82, "snr": 45.6, "nitidez": 12.32},
+    {"clip": "2x_4k_16x9_60", "lenta": "2x", "nitidez_camara": "Medium", "brillo": 118.6, "ruido": 4.78, "snr": 24.8, "nitidez": 13.79},
+    {"clip": "2x_4k_4x3_60", "lenta": "2x", "nitidez_camara": "Medium", "brillo": 124.3, "ruido": 4.04, "snr": 30.8, "nitidez": 13.19},
+    {"clip": "2x_2_7k_4x3_60", "lenta": "2x", "nitidez_camara": "Medium", "brillo": 124.5, "ruido": 3.43, "snr": 36.3, "nitidez": 15.17}
+  ],
+  "etapa_2_nitidez_de_la_camara_a_120fps": [
+    {"clip": "nitidez_low_4k_16x9_120", "nitidez_camara": "Low", "brillo": 88.4, "ruido": 2.87, "snr": 30.8, "nitidez": 5.37},
+    {"clip": "4x_4k_16x9_120", "nitidez_camara": "Medium", "brillo": 92.1, "ruido": 3.25, "snr": 28.3, "nitidez": 10.75},
+    {"clip": "nitidez_high_4k_16x9_120", "nitidez_camara": "High", "brillo": 91.2, "ruido": 4.81, "snr": 19.0, "nitidez": 15.10},
+    {"clip": "nitidez_low_2_7k_4x3_120", "nitidez_camara": "Low", "brillo": 98.2, "ruido": 2.26, "snr": 43.5, "nitidez": 3.36},
+    {"clip": "4x_2_7k_4x3_120", "nitidez_camara": "Medium", "brillo": 99.2, "ruido": 2.51, "snr": 39.6, "nitidez": 5.71},
+    {"clip": "nitidez_high_2_7k_4x3_120", "nitidez_camara": "High", "brillo": 95.1, "ruido": 2.93, "snr": 32.5, "nitidez": 7.43}
+  ],
+  "render_ffmpeg": {
+    "cadena": "hqdn3d 2:2:6:6, recorte 9:16, escala lanczos, [minterpolate], unsharp 0.6, eq, setpts, fps 30, libx264 crf 18",
+    "tiempos_en_M1_Pro_con_clip_de_4s": [
+      {"version": "2.7K 4:3 a 120 fps, 4x real", "segundos": 19},
+      {"version": "5.3K a 60 fps, 2x real", "segundos": 20},
+      {"version": "5.3K a 60 fps, 4x interpolado", "segundos": 396}
+    ],
+    "nota": "El mismo render sin interpolación tardó entre 19 y 54 s según la carga del Mac. No es una cifra de rendimiento."
+  }
+}
