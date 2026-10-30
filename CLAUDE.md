@@ -36,7 +36,7 @@ Las decisiones del proyecto viven en Notion, no en este repositorio:
 | `web/` | Astro en Vercel (D27) en `glam.datzoncompany.com`: página del invitado, panel de administración, API de sesiones, envío de correos y limpieza diaria, sobre Supabase (D28) | Camino crítico del evento, interfaz del operador, realtime (D14) |
 | `docs/` | Diagramas Mermaid de lo decidido y los artifacts versionados (D29). `architecture.excalidraw` está superado por el artifact | Decisiones (viven en Notion) |
 
-Hoy el único código de producción es el núcleo de `edge/src/edge/session/` con sus falsos; `web/` es solo el esqueleto de Astro, y `edge/tools/` guarda las herramientas de planificación. El detalle de cada carpeta está en `README.md`, el único README del repo, a propósito: cuando una carpeta gane contenido, actualiza esa tabla en lugar de crear un README nuevo. Mantén este mapa y esa tabla en sincronía.
+Hoy el código de producción es el núcleo de `edge/src/edge/session/` con sus falsos, el adaptador de la cámara en `camera/` y el render en `render/`; `web/` es solo el esqueleto de Astro, y `edge/tools/` guarda las herramientas de planificación. El detalle de cada carpeta está en `README.md`, el único README del repo, a propósito: cuando una carpeta gane contenido, actualiza esa tabla en lugar de crear un README nuevo. Mantén este mapa y esa tabla en sincronía.
 
 ## 4. Reglas duras
 

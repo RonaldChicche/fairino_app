@@ -2,7 +2,7 @@
 
 Sistema tipo *glambot* para eventos: un brazo FAIRINO FR10 ejecuta una ruta mientras una GoPro HERO10 graba, un nodo edge local renderiza el video con la plantilla del evento y el invitado lo recibe por correo con un enlace a una web en Vercel. Si eres un agente, lee primero [CLAUDE.md](CLAUDE.md); cada proyecto tiene además el suyo: [edge/CLAUDE.md](edge/CLAUDE.md) y [web/CLAUDE.md](web/CLAUDE.md).
 
-> **Estado: en diseño.** Solo está cerrado lo que Notion marca como "Decidido". Siguen abiertos la máquina de estados de la toma (A1), el catálogo de rutas (C4) y el formato de plantilla (C5). Todavía no hay código de producción.
+> **Estado: en diseño.** Solo está cerrado lo que Notion marca como "Decidido". Siguen abiertos la máquina de estados de la toma (A1), el catálogo de rutas (C4) y el formato de plantilla (C5). Ya hay código de producción en `edge/`: el núcleo de `session/`, el adaptador de la cámara y el render. `web/` es solo el esqueleto y el adaptador del robot aún no existe.
 
 **Fuente de verdad:** [Robot App en Notion](https://app.notion.com/p/Robot-App-3d7ac27a4ba480f19cd9cde2427ea213). Las decisiones viven allí y este repo no las copia: por eso no existe `decisions.md`.
 
@@ -36,5 +36,6 @@ Las carpetas vacías llevan `.gitkeep` solo para que git las conserve.
 | `artifacts/arquitectura-glambot/` | Creado | Canvas con cuatro páginas: arquitectura, entrega de videos, pantallas de la app y datos. Fuentes de los tableros y los scripts que los generan | D1–D34 |
 | `architecture.excalidraw` | Superado | Vista anterior de la arquitectura. La reemplaza el artifact (D29); se borra | D1–D25 |
 | `session-state-machine.mmd` | Creado | Secuencia y estados de una toma, incluidos los fallos a mitad de camino | A1, D37 |
+| `artifacts/render-pipeline/` | Creado | Página con tres gráficos del render: qué pasa con una toma, qué decide la cadena de ffmpeg según los fps del crudo y cuánto cuesta llegar al 4× | D17, D19 |
 | `event-network.mmd` | Planificado | Red del evento: wifi del edge, tablet del operador, celular del invitado, router 4G/5G | D15, D24, E1 |
 | `upload-and-delivery.mmd` | Planificado | Cola de subida, envío del correo y cambio entre modo nube y modo local | C3, D21, G3 |
