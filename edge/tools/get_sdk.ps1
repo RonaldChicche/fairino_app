@@ -33,9 +33,9 @@ New-Item -ItemType Directory -Path $Tmp -Force | Out-Null
 try {
     # El repositorio completo contiene cientos de MB de binarios que esta demo
     # no usa. Descargar los archivos raw evita clones lentos o interrumpidos.
-    # El controlador de este proyecto expone el canal de estado legado 20004,
-    # no CNDE 20005. Esta es la ultima revision oficial anterior a CNDE.
-    $SdkRef = 'v2.2.4_robot_v3.9.4'
+    # El SDK tiene que coincidir con el software del controlador (FR10 v3.8.6
+    # usa el canal de estado 20004; las versiones con CNDE 20005 no conectan).
+    $SdkRef = 'v2.1.6_robot3.8.6'
     $BaseUrl = "https://raw.githubusercontent.com/FAIR-INNOVATION/fairino-python-sdk/$SdkRef/$Plataforma/fairino"
     $RobotPy = Join-Path $Tmp 'Robot.py'
     Write-Host 'Descargando Robot.py del SDK oficial ...'

@@ -8,6 +8,9 @@
 set -euo pipefail
 
 REPO="https://github.com/FAIR-INNOVATION/fairino-python-sdk.git"
+# El SDK tiene que coincidir con el software del controlador (FR10 v3.8.6 usa el
+# canal de estado 20004; el SDK de la rama principal pide CNDE 20005 y no conecta).
+SDK_REF="v2.1.6_robot3.8.6"
 DEST="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/vendor/fairino"
 
 # linux/Robot.py y windows/Robot.py son identicos (mismo md5) y Python puro,
@@ -23,8 +26,8 @@ echo "Sistema: $(uname -s) -> usando carpeta '$PLATAFORMA' del SDK"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
-echo "Clonando el SDK ..."
-git clone --depth 1 --quiet "$REPO" "$TMP/sdk"
+echo "Clonando el SDK ($SDK_REF) ..."
+git clone --depth 1 --quiet --branch "$SDK_REF" "$REPO" "$TMP/sdk"
 
 ORIGEN="$TMP/sdk/$PLATAFORMA/fairino"
 if [ ! -f "$ORIGEN/Robot.py" ]; then
