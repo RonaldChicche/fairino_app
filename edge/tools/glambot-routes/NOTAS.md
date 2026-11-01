@@ -189,3 +189,12 @@ Medidos el 2026-10-31 con `tools/robot-lab/`. Donde difieren de lo anotado arrib
 - Tras el paro, el controlador rechaza lecturas de variables de sistema (código 14): una lectura de estado después de un paro puede fallar y no debe romper el veredicto.
 - Una sola lectura del estado dio una pose corrupta (`z = 66,0` entre dos lecturas de 949,4): los paquetes de estado pueden traer datos erróneos sueltos. Una pose no debe fiarse de una sola muestra.
 - `ProgramPause` / `ProgramResume` / `ProgramStop` a mitad de un `MoveL` (a los 4 s, subiendo): los tres devuelven 0. La pausa pone `program_state` y `robot_state` en 3 y el brazo se detiene en menos de 1 mm; al reanudar sigue el trayecto y termina en el punto de partida (17,7 s con 3 s de pausa). `ProgramStop` deja el programa y el movimiento en 1 en 0,2 s y el brazo queda donde estaba, sin volver al inicio.
+
+### Réplica cinemática: diferencias conocidas con el robot (`tools/kinematics-replica/`)
+
+La réplica coincide con el robot en FK, soluciones de IK, límites y movimientos relativos (`compare_golden.py` con `golden/fr10_v386.json`). Quedan dos diferencias sin explicar, ambas en el lado optimista (la réplica da por alcanzable algo que el robot rechaza):
+
+- **14 de 260 poses absolutas** (`GetInverseKinHasSolution` tipo 0): la réplica dice que sí y el robot que no. No las separa la distancia a la base, al hombro o a la muñeca, ni el radio, la altura o la cercanía a los límites articulares. Las rechazadas están entre 1032 y 1533 mm de la base.
+- **Alcance por rayo**: un rayo (el 38) difiere en +198 mm (réplica 2268,7 mm, robot 2070,3 mm) y otro en +14 mm; el resto, en pocos mm.
+
+Consecuencia: la réplica sirve para planificar, pero toda ruta nueva se confirma con `GetInverseKinHasSolution` en el controlador antes de ejecutarla (lo hace `robot/`).
