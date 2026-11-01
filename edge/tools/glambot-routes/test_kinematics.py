@@ -200,6 +200,8 @@ def _urdf_forward(joints_deg):
         moved = vec(rot, tuple(v * 1000.0 for v in xyz))
         pos = tuple(pos[k] + moved[k] for k in range(3))
         rot = mul(mul(rot, rx(roll)), rz(math.radians(q)))
+    # El URDF no modela la brida: se suma a mano su desplazamiento medido.
+    pos = tuple(pos[k] + kin.FLANGE_OFFSET_MM * rot[k][2] for k in range(3))
     return rot, pos
 
 
@@ -224,8 +226,8 @@ def test_check_reasons():
     print("\n7) `check` distingue los tres motivos de fallo")
     cases = [
         ("fuera de alcance", (2500.0, 0.0, 500.0, 0.0, 0.0, 0.0)),
-        ("límite articular", (-816.95, 795.41, 810.73, 92.03, -1.92, -166.83)),
-        ("sin solución", (-493.27, -977.62, 1032.06, -153.92, 6.46, -48.35)),
+        ("límite articular", (474.67, -784.99, 1134.72, 86.09, 0.88, -106.12)),
+        ("sin solución", (-1149.2, 19.33, -232.51, -23.89, -77.43, -147.34)),
     ]
     ok = True
     for expected, pose in cases:
@@ -272,8 +274,8 @@ def test_singular_poses(rng):
     ok = True
 
     stretched = [15.0, -100.0, 0.0, -80.0, -70.0, 25.0]
-    folded = [15.0, -100.0, 162.0, -80.0, -70.0, 25.0]
-    for label, joints in [("codo estirado j3=0", stretched), ("codo plegado j3=162", folded)]:
+    folded = [15.0, -100.0, 160.0, -80.0, -70.0, 25.0]
+    for label, joints in [("codo estirado j3=0", stretched), ("codo plegado j3=160", folded)]:
         pose = kin.forward(joints)
         result = kin.check(pose, joints)
         clean = result["ok"] and all(v == v for v in result["joints"])
@@ -337,7 +339,7 @@ def test_reach_envelope(rng):
             lowest, highest = min(lowest, planar), max(highest, planar)
         else:
             rejected += 1
-        closest = min(closest, math.hypot(pose[0], pose[1]))
+        closest = min(closest, math.hypot(*kin._wrist_origin(pose)[:2]))
     print(f"   cotas del módulo: eje>={abs(kin.D4):.0f} · NEAR_MM={kin.NEAR_MM:.3f} · REACH_MM={kin.REACH_MM:.1f}")
     print(f"   en 20000 posturas: plano [{lowest:.3f}, {highest:.3f}] mm · eje de j1 desde {closest:.3f} mm")
     print(f"   posturas reales rechazadas por la envolvente: {rejected}")

@@ -14,8 +14,8 @@ perpendiculares, así que sigue habiendo solución cerrada con 8 ramas. La excep
 los ejes 4 y 6 se alinean, las soluciones dejan de ser 8 puntos y pasan a ser una familia continua,
 y `_ik_branches` recorre el parámetro libre en lugar de resolverlo.
 
-La correspondencia de ceros y signos entre los ángulos del URDF y los del controlador FAIRINO NO
-está verificada contra el robot: todo lo de aquí es coherente consigo mismo y con el URDF, nada más.
+La FK está verificada contra el controlador del FR10 (ceros, signos y FLANGE_OFFSET_MM). La IK no
+se contrastó con el controlador: es coherente con la FK y nada más.
 
 Uso:
   python3 kinematics.py            # demostración rápida
@@ -28,12 +28,12 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from routes import fairino_rpy_to_rotation, rotation_to_fairino_rpy  # noqa: E402
 
-# Límites `lower`/`upper` del URDF, redondeados al grado (los valores en radianes son grados
-# exactos con 5 cifras). Coinciden con los límites blandos medidos en el FR5 salvo j3 (±160° allí).
+# Límites blandos del controlador del FR10 (medidos en el robot real). Los del URDF son iguales
+# salvo j3, que allí es ±162°.
 JOINT_LIMITS_DEG = [
     (-175.0, 175.0),
     (-265.0, 85.0),
-    (-162.0, 162.0),
+    (-160.0, 160.0),
     (-265.0, 85.0),
     (-175.0, 175.0),
     (-175.0, 175.0),
@@ -46,10 +46,11 @@ A2 = -700.0
 A3 = -586.0
 D4 = 159.0
 D5 = 114.0
-# El URDF termina en wrist3_link: no hay ni articulación ni eslabón después de j6, así que la brida
-# del modelo coincide con el origen de ese marco. (Que |A2| + |A3| + D5 dé los 1400 mm de catálogo
-# no lo confirma: el radio horizontal máximo de esta cadena es 1409 mm, no 1400.)
-D6 = 0.0
+# El URDF termina en wrist3_link y no modela la brida. Medido contra el controlador real (30 posturas
+# al azar dentro de límites), la FK coincide a 0,0001 mm y 0,0000° solo si se suman 106,0 mm sobre el
+# eje z de ese marco. La IK resuelve el marco del URDF desplazando la pose pedida esa distancia hacia atrás.
+FLANGE_OFFSET_MM = 106.0
+D6 = FLANGE_OFFSET_MM
 
 ALPHA = (math.pi / 2, 0.0, 0.0, math.pi / 2, -math.pi / 2, 0.0)
 D = (D1, 0.0, 0.0, D4, D5, D6)
@@ -127,13 +128,18 @@ def forward(joints_deg):
 
 def link_points(joints_deg):
     """Orígenes de los marcos, de la base a la brida, para dibujar el brazo "en palitos"."""
-    # El marco 6 coincide con el 5 porque D6 = 0: se omite para no dibujar un segmento nulo.
-    return [frame[1] for frame in _chain(joints_deg)[:6]]
+    return [frame[1] for frame in _chain(joints_deg)]
 
 
 def _pose_parts(pose):
     x, y, z, rx, ry, rz = pose
     return (x, y, z), fairino_rpy_to_rotation(rx, ry, rz)
+
+
+def _wrist_origin(pose):
+    """Origen del marco wrist3 del URDF: la brida desplazada FLANGE_OFFSET_MM hacia atrás en su eje z."""
+    pos, rot = _pose_parts(pose)
+    return tuple(pos[k] - FLANGE_OFFSET_MM * rot[k][2] for k in range(3))
 
 
 def _rotation_error_deg(a, b):
@@ -163,7 +169,8 @@ def _pick_per_elbow(candidates, seed_joints_deg):
 
 def _ik_branches(pose, seed_joints_deg=None):
     """Las hasta 8 ramas, en grados y sin filtrar por límites (4 si la muñeca es singular)."""
-    pos, rot = _pose_parts(pose)
+    _, rot = _pose_parts(pose)
+    pos = _wrist_origin(pose)
     (r11, r12, r13), (r21, r22, r23), _ = rot
     seed6 = math.radians(seed_joints_deg[5]) if seed_joints_deg else 0.0
 
@@ -266,7 +273,7 @@ def _out_of_reach(pose):
     cotas exactas, que nunca se acerque más de D4 a ese eje y que en el plano quede entre NEAR_MM
     y REACH_MM del hombro. Las tres son necesarias, así que no rechazan nada alcanzable.
     """
-    x, y, z, _, _, _ = pose
+    x, y, z = _wrist_origin(pose)
     radius = math.hypot(x, y)
     if radius < abs(D4) - _EPS:
         return "eje", radius
