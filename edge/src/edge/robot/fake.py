@@ -12,6 +12,12 @@ class FakeRobot:
         if self.fails:
             raise RuntimeError("el controlador reportó un error")
 
+    async def set_mode(self, auto: bool) -> None:
+        self.calls.append(f"mode:{'auto' if auto else 'manual'}")
+
+    async def list_programs(self) -> list[str]:
+        return [c.removeprefix("upload:") for c in self.calls if c.startswith("upload:")]
+
     async def upload_program(self, name: str, lua_source: str) -> None:
         self.calls.append(f"upload:{name}")
 
@@ -29,6 +35,15 @@ class FakeRobot:
 
     async def move_circular(self, via, target, params) -> None:
         self.calls.append("move_circular")
+
+    async def jog(self, frame, axis, direction, max_distance, speed) -> None:
+        self.calls.append(f"jog:{frame}:{axis}:{direction}")
+
+    async def jog_stop(self, frame) -> None:
+        self.calls.append(f"jog_stop:{frame}")
+
+    async def jog_halt(self) -> None:
+        self.calls.append("jog_halt")
 
     async def pause(self) -> None:
         self.calls.append("pause")
