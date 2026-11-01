@@ -19,6 +19,15 @@ Servicio Python que corre junto al robot. Orquesta cada toma sin depender de int
 - `app.py` conecta los adaptadores con el núcleo. Es el único lugar que conoce a todos.
 - Todo lo que dependa de internet pasa por `uploader/`. El camino de la toma nunca espera a la nube.
 
+## SDK de FAIRINO
+
+- El SDK vive en `vendor/fairino/` y Git lo ignora. Se baja con `tools/get_sdk.sh` (o `.ps1`), que fija la versión.
+- **Tiene que coincidir con el software del controlador.** El FR10 actual es `v3.8.6` y su SDK es `v2.1.6_robot3.8.6`. El de la rama principal (3.9.x) no conecta con él: pide el puerto de estado 20005 y métodos que el 3.8.6 no tiene.
+- **No se actualiza el firmware del controlador** (decisión del responsable): el FR10 se queda en `v3.8.6`. Consecuencia medida: sin una parada por pérdida de comunicación configurable, un corte de red a mitad de una toma no detiene el brazo, que termina su ruta (`tools/glambot-routes/NOTAS.md`).
+- Si el controlador se actualiza, cambia la versión fijada en `get_sdk.sh` y `get_sdk.ps1` en el mismo cambio y revisa las llamadas de `robot/`.
+- Para saber qué versión hay instalada usa `GetSDKVersion()`, no `vendor/fairino/README.txt`: es un historial de cambios cuyas primeras líneas son de versiones viejas.
+- Una sola conexión al controlador por vez. Varias seguidas coincidieron con la caída de sus servicios (`tools/glambot-routes/NOTAS.md`).
+
 ## Pruebas
 
 Herramienta: `pytest`, con `uv run pytest`.

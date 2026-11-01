@@ -24,19 +24,19 @@ Las decisiones del proyecto viven en Notion, no en este repositorio:
 | Carpeta | Qué vive aquí | Qué NO vive aquí |
 |---|---|---|
 | `edge/` | Servicio Python en el mini PC junto al robot (laptop mientras tanto, D4 y D12). Todo el camino crítico del evento | Nada que necesite internet para completar una toma |
-| `edge/src/edge/robot/` | Cliente del SDK FAIRINO: invocar primitivas Lua con parámetros y leer el estado del robot | Trayectorias propias, validación de límites, seguridad física |
+| `edge/src/edge/robot/` | Cliente del SDK FAIRINO: invocar primitivas Lua con parámetros, leer el estado, vigilar la conexión y el jog del Studio | Trayectorias propias, validación de límites, seguridad física |
 | `edge/src/edge/camera/` | Cliente Open GoPro por USB: grabar, confirmar que graba, listar y descargar | Decidir cuándo grabar, procesar video |
 | `edge/src/edge/session/` | Máquina de estados de una toma, con candado e idempotencia | Llamadas directas al SDK o a la cámara, HTTP, subidas |
 | `edge/src/edge/render/` | Wrapper de ffmpeg por plantilla: un archivo final por toma | Definir el formato de plantilla, subir el resultado |
 | `edge/src/edge/server/` | HTTP local: interfaz del operador y Studio de rutas en HTML plano, QR, página local de respaldo, PWA | Lógica de la toma, la web de la nube |
 | `edge/src/edge/uploader/` | Cola de subida con reintentos, persistente entre reinicios | Bloquear o condicionar el camino crítico |
 | `edge/tests/` | Pruebas de `edge` | Pruebas de la web, scripts de exploración |
-| `edge/tools/` | Herramientas offline: planificación de rutas (cinemática, planificador, generador del Lua, simulador, modelo del FR10), `camera-probe` y `get_sdk`, que descarga el SDK de FAIRINO | Código que corra en el camino crítico de una toma |
+| `edge/tools/` | Herramientas offline: planificación de rutas (cinemática, planificador, generador del Lua, simulador, modelo del FR10), `camera-probe`, `robot-lab` (prueba el controlador: sube un Lua, lo corre con datos y vigila el estado) y `get_sdk`, que descarga el SDK de FAIRINO | Código que corra en el camino crítico de una toma |
 | `edge/vendor/`, `edge/data/` | `vendor/fairino/` es el SDK descargado; `data/` guarda la cola y las tomas locales. Git ignora ambas | Código propio |
 | `web/` | Astro en Vercel (D27) en `glam.datzoncompany.com`: página del invitado, panel de administración, API de sesiones, envío de correos y limpieza diaria, sobre Supabase (D28) | Camino crítico del evento, interfaz del operador, realtime (D14) |
 | `docs/` | Diagramas Mermaid de lo decidido y los artifacts versionados (D29). `architecture.excalidraw` está superado por el artifact | Decisiones (viven en Notion) |
 
-Hoy el código de producción es el núcleo de `edge/src/edge/session/` con sus falsos, el adaptador de la cámara en `camera/` y el render en `render/`; `web/` es solo el esqueleto de Astro, y `edge/tools/` guarda las herramientas de planificación. El detalle de cada carpeta está en `README.md`, el único README del repo, a propósito: cuando una carpeta gane contenido, actualiza esa tabla en lugar de crear un README nuevo. Mantén este mapa y esa tabla en sincronía.
+Hoy el código de producción es el núcleo de `edge/src/edge/session/` con sus falsos, el adaptador de la cámara en `camera/`, el render en `render/` y un primer adaptador del robot en `robot/` (borrador: falta probarlo en el robot, ver `edge/tools/glambot-routes/NOTAS.md`); `web/` es solo el esqueleto de Astro, y `edge/tools/` guarda las herramientas de planificación. El detalle de cada carpeta está en `README.md`, el único README del repo, a propósito: cuando una carpeta gane contenido, actualiza esa tabla en lugar de crear un README nuevo. Mantén este mapa y esa tabla en sincronía.
 
 ## 4. Reglas duras
 

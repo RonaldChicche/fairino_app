@@ -156,3 +156,36 @@ Del rastreador oficial (`github.com/FAIR-INNOVATION/fairino-python-sdk/issues`, 
 - [ ] Con el vigilante activo: cuánto tarda en detener y con qué tipo de parada (0, 1a, 1b o 2).
 - [ ] Sin vigilante: confirmar que un programa Lua en marcha termina la ruta con el cable desconectado.
 - [ ] Elegir `confirmTime`: tensión entre absorber un hipo de red, para que la toma termine, y responder rápido. Va a Notion como decisión.
+
+## Hallazgos en el FR10 real (software 3.8.6)
+
+Medidos el 2026-10-31 con `tools/robot-lab/`. Donde difieren de lo anotado arriba, vale esto.
+
+> **Confirmación física:** solo el cuadrado de 200 mm a 10 % (`z_square.lua`) lo vio el responsable moverse con claridad. Las demás pruebas de movimiento de esta sección, hechas con poca atención o con recorridos de 6 a 10 cm, se midieron por el estado que reporta el controlador. Ese estado coincidió con lo visto en el cuadrado.
+
+**Conexión y SDK**
+- Controlador `FR10-V1-001(V6.0)`, software `v3.8.6`, firmware `V3.8.36-QX`, IP `192.168.58.2`. El Mac entra por cable con `192.168.58.100/24` en el adaptador USB-LAN.
+- El SDK que corresponde es `v2.1.6_robot3.8.6` (`get_sdk` lo fija). El de 3.9.x abre el puerto de estado 20005 y llama a `GetLuaListPrepare`; el 3.8.6 no tiene ninguno de los dos y todo devuelve `-4`.
+- Tras una tanda de lecturas seguidas (SDK incompatible, XML-RPC directo y sondeo de puertos) el controlador dejó de aceptar conexiones en 20003, 20004 y 8080 y el LED del extremo ciclaba colores (en el manual: comunicación no establecida). Se recuperó al reiniciar la caja. Causa sin confirmar: abrir una sola conexión por vez.
+
+**Programas**
+- Los Lua viven en `/fruser/`. `ProgramLoad` necesita la ruta completa: con solo el nombre devuelve 144.
+- `LuaUpload` ejecuta el script para validarlo y devuelve el error de Lua con su línea. Un archivo que falla la validación **queda guardado** en el robot igualmente. En esa pasada la cinemática devuelve `nil`: el programa debe terminar antes de cualquier movimiento.
+- La subida falla a veces con `-1` (el SDK devuelve lo mismo si no conecta al 20010, si falla el envío o si no llega `SUCCESS` en 0,5 s). Un reintento a los 2 s basta.
+- `LuaDownLoad` necesita la barra final en la carpeta de destino. Un archivo que aparece en la lista pudo no descargarse (`-1`).
+
+**Modo, ejecución y estado**
+- En modo manual `ProgramRun` devuelve 0 pero el programa no corre. `Mode(0)` pasa a automático y `Mode(1)` a manual; `robot_state_pkg.robot_mode` lo confirma.
+- Hay 20 variables de sistema (`s_var_1` a `s_var_20`), solo números, y conservan el valor entre ejecuciones y tras reiniciar.
+- Estado en vivo en `robot_state_pkg`: `program_state`, `robot_state`, `motion_done`, `mc_queue_len`, `tl_cur_pos`, `EmergencyStop`. Se da por terminado con programa y movimiento parados y la cola vacía durante 1 s.
+- Con herramienta 0 y pieza 0 activas, `GetForwardKin` del Lua coincide con la pose real del robot a menos de 0,01 mm.
+- Prueba +100 mm en Z y vuelta, a 5 % (`z_relative.lua`, dos `MoveL` bloqueantes): dura unos 13,7 s (≈15,6 mm/s). La pose (`tl_cur_pos`) **sí se actualiza en vivo** durante el movimiento. `program_state` y `robot_state` pasan a 2 al arrancar y a 1 a la vez al terminar; `motion_done` vale 0 todo el tramo y no oscila entre los dos `MoveL`. `mc_queue_len` vale 0 siempre y no sirve como señal.
+- La señal de fin sale del flujo de estado (TCP al puerto 20004, que el SDK deja en `robot_state_pkg`), no de una variable que escriba el Lua. `GetProgramState` y `GetRobotMotionDone` del SDK solo leen ese paquete. `frame_cnt` cuenta los paquetes y sirve para detectar que el flujo se congeló.
+- Cuadrado de 60 mm en cuatro `MoveL` con blending de 10 mm a 5 % (`z_square.lua`): 14,1 s de movimiento a 15,9 mm/s de media y ningún tramo por debajo de 3 mm/s, así que **el brazo no se detiene en las esquinas**. `motion_done` sí cambia 7 veces durante el recorrido: no sirve como señal de fin (el hallazgo 10b de arriba era esa señal, no una parada física). La velocidad se calculó con `tl_cur_pos` a unos 200 Hz.
+- Un error de Lua (suma con un valor `nil`) **no deja ningún código** en `main_code`/`sub_code`: el programa vuelve a `program_state = 1` en menos de 0,1 s como si hubiera terminado bien. El éxito hay que confirmarlo: variable de cierre alcanzada, el brazo se movió y la pose final es la esperada.
+- **Paro de emergencia físico a mitad de una subida (botón externo por la botonera):** el estado pasa a `EmergencyStop = 1`, `main_code/sub_code = (5, 1)`, `rbtEnableState = 0` (deshabilitado, frenos puestos, pares en 0) y el programa y el movimiento quedan parados; el brazo se queda donde estaba. **No se recupera por software**: tras soltar el botón sigue `EmergencyStop = 1` con error `(6, 2)` y luego `(6, 5)`; `ResetAllError()` devuelve -1, `RobotEnable(1)` devuelve 0 pero no habilita, `Mode(1)` devuelve 14, y el botón "Clear" del panel responde `500 Error: Please release the emergency stop button first`. El panel indica "apaga y reinicia la caja de control", que fue lo que hubo que hacer. El manual habla de otras vías según el tipo de parada y la habilitación (*Initial > Safety > Emergency stop*): sin comprobar en este robot.
+- **Corte del cable de red con un programa en marcha** (subida de 15 cm a 5 %, cable fuera unos 15 s, sin ninguna parada por pérdida de comunicación configurada): el brazo **siguió y terminó la ruta** solo, y al volver el cable quedó quieto en el punto de partida, sin repetir nada. El robot **no se detiene por perder la comunicación** con este firmware (3.8.6) en su configuración actual. El SDK v2.1.6 no tiene `SetRobotStopOnComDisc`. Se infiere, sin registro porque se perdió la salida del script, que las llamadas del cliente quedaron esperando hasta que volvió el cable (reintentos sin tope del SDK) y luego siguieron.
+- `SetRobotStopOnComDisc` aparece en el SDK desde la v2.2.4 (robot 3.9.4) y no existe en las de 3.8.x ni en 3.9.0–3.9.3. Se decidió no actualizar el controlador. El manual 3.9.8 (sección 3.5.7) describe en la caja de control una entrada de **paro de emergencia** y una de **paro de protección** (categoría 1, reinicio automático o manual), ambas redundantes de dos canales, pensadas para dispositivos externos; no documenta ningún comando de software ni salida del controlador que dispare un paro. El cableado está solo en las figuras 3.5-10 a 3.5-12.
+- Tras el paro, el controlador rechaza lecturas de variables de sistema (código 14): una lectura de estado después de un paro puede fallar y no debe romper el veredicto.
+- Una sola lectura del estado dio una pose corrupta (`z = 66,0` entre dos lecturas de 949,4): los paquetes de estado pueden traer datos erróneos sueltos. Una pose no debe fiarse de una sola muestra.
+- `ProgramPause` / `ProgramResume` / `ProgramStop` a mitad de un `MoveL` (a los 4 s, subiendo): los tres devuelven 0. La pausa pone `program_state` y `robot_state` en 3 y el brazo se detiene en menos de 1 mm; al reanudar sigue el trayecto y termina en el punto de partida (17,7 s con 3 s de pausa). `ProgramStop` deja el programa y el movimiento en 1 en 0,2 s y el brazo queda donde estaba, sin volver al inicio.
