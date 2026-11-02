@@ -32,10 +32,10 @@ def hashed_name(name: str, source: str) -> str:
 class FairinoRobot:
     """Una sola conexión al controlador y un cerrojo: dos órdenes nunca viajan a la vez."""
 
-    def __init__(self, primitives: dict[str, Primitive], ip: str = "192.168.58.2", sdk_class=None,
+    def __init__(self, primitives: dict[str, Primitive], ip: str = "192.168.58.2",
                  poll: float = 0.05, settle: float = 1.0, on_link_change=lambda link, alert: None,
                  jog_max_speed: float = 10.0, jog_max_distance: float = 30.0):
-        self._primitives, self._ip, self._sdk_class = primitives, ip, sdk_class
+        self._primitives, self._ip = primitives, ip
         self._poll, self._settle, self._on_link_change = poll, settle, on_link_change
         self._jog_max_speed, self._jog_max_distance = jog_max_speed, jog_max_distance
         self._sdk = None
@@ -45,7 +45,7 @@ class FairinoRobot:
         self._ids = itertools.count(1)
 
     async def connect(self) -> None:
-        self._sdk = await asyncio.to_thread(self._sdk_class or load_sdk(), self._ip)
+        self._sdk = await asyncio.to_thread(load_sdk(), self._ip)
         _, labels = self._sdk.GetSDKVersion()
         controller = (await self._call(self._sdk.GetSoftwareVersion))[2]
         wanted = next(label for label in labels if label.startswith("Robot:"))[len("Robot:"):]
