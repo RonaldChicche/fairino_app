@@ -39,6 +39,6 @@ def failures(o: Observation) -> list[str]:
         found.append(f"el controlador reporta el error {o.error}")
     if o.emergency_stop:
         found.append("paro de emergencia activo")
-    if o.pose_error_mm is not None and o.pose_error_mm > POSE_TOLERANCE_MM:
+    if o.pose_error_mm is not None and not o.pose_error_mm <= POSE_TOLERANCE_MM:
         found.append(f"la pose final queda a {o.pose_error_mm:.1f} mm de la esperada")
     return found

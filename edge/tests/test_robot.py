@@ -20,6 +20,7 @@ def test_params_outside_the_declared_range_are_rejected_before_the_robot(params)
     ({"status": 0}, "no llegó a su final"),
     ({"seen_moving": False}, "nunca se movió"),
     ({"pose_error_mm": 60.0}, "de la esperada"),
+    ({"pose_error_mm": float("nan")}, "de la esperada"),
     ({"error": (1, 19)}, "reporta el error"),
     ({"echo": 6}, "no leyó el ID"),
     ({"stream_alive": False}, "se congeló"),

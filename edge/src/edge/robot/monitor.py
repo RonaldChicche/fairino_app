@@ -33,5 +33,8 @@ class ConnectionMonitor:
 
     async def run(self) -> None:
         while True:
-            self.check()
+            try:
+                self.check()
+            except Exception:
+                self.state = Link.DISCONNECTED
             await asyncio.sleep(self._interval)

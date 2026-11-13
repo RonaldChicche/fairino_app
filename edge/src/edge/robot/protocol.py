@@ -43,13 +43,18 @@ def check_params(spec: Primitive, params: dict) -> None:
         raise InvalidParams(f"parámetros inválidos: sobran {sorted(unknown)}, faltan {sorted(missing)}")
     for name, value in params.items():
         param = spec.params[name]
-        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or (isinstance(value, float) and not math.isfinite(value)):
             raise InvalidParams(f"{name} no es un número")
         if not param.low <= value <= param.high:
             raise InvalidParams(f"{name} = {value}, el rango es de {param.low} a {param.high}")
 
 
 JOG_REFS = {"joint": 0, "base": 2, "tool": 4, "workpiece": 8}
+
+
+def check_move_speed(speed: float, limit_speed: float) -> None:
+    if not 0 < speed <= limit_speed:
+        raise InvalidParams(f"velocidad {speed} %, el máximo es {limit_speed} %")
 
 
 def check_jog(frame: str, axis: int, direction: int, max_distance: float, speed: float,

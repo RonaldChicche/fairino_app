@@ -1,5 +1,7 @@
 import asyncio
 
+from edge.robot.protocol import RunFailed
+
 
 class FakeRobot:
     def __init__(self, fails: bool = False, gate: asyncio.Event | None = None):
@@ -10,7 +12,7 @@ class FakeRobot:
         if self.gate:
             await self.gate.wait()
         if self.fails:
-            raise RuntimeError("el controlador reportó un error")
+            raise RunFailed(["el controlador reportó un error"], {})
 
     async def set_mode(self, auto: bool) -> None:
         self.calls.append(f"mode:{'auto' if auto else 'manual'}")
